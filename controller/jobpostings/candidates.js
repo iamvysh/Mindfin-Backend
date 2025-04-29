@@ -88,6 +88,7 @@ export const getAllCandidates = async (req, res, next) => {
   
       const candidates = await candidateModel
         .find(nameFilter)
+        .sort({createdAt:-1})
         .populate({
           path: "appliedFor",
           match: jobMatch,

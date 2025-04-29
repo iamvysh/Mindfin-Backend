@@ -1,9 +1,9 @@
 import express from "express";
-import { addEmployee, branchSelection, deleteEmployee, editEmployee, forgotPassword, generatePassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyGeneratePassword, verifyOtp, whoAmI } from "../controller/employee/employee.js";
+import { addEmployee, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, generatePassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyGeneratePassword, verifyOtp, whoAmI } from "../controller/employee/employee.js";
 import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { createPayRoll, deletePayRoll, getAllPayRolls, getPayRollById, updatePayRoll } from "../controller/payrolls/payRoll.js";
 import { createPaySlip, deletePaySlip, getAllPaySlips, getPaySlipById, updatePaySlip } from "../controller/payrolls/paySlip.js";
-import { createJob, deleteJob, getAllJobs, getJobById, updateJob, updatePublish } from "../controller/jobpostings/jobsController.js";
+import { createJob, deleteJob, getAllJobs, getAllJobsforModal, getJobById, updateJob, updatePublish } from "../controller/jobpostings/jobsController.js";
 import { createCandidate, deleteCandidate, getAllCandidates, getCandidateById, updateCandidate } from "../controller/jobpostings/candidates.js";
 import { departmentSpecificEmployees, getAllDepartmentEmployees } from "../controller/department/department.js";
 import { createHoliday, deleteHoliday, getAllHolidays, getHolidayById, updateHoliday } from "../controller/holiday/holiday.js";
@@ -73,6 +73,7 @@ router.get("/get-job/:id",tryCatchMiddleware(getJobById))
 router.put("/update-job/:id",tryCatchMiddleware(updateJob))
 router.delete("/delete-job/:id",tryCatchMiddleware(deleteJob))
 router.put("/update-publish/:id",tryCatchMiddleware(updatePublish))
+router.get("/get-all-jobs-for-modal",primaryValidater,tryCatchMiddleware(getAllJobsforModal))
 
 
 //candidates
@@ -125,6 +126,11 @@ router.get("/get-branch-data",primaryValidater,PermittedToSuperAdminAndHR,tryCat
 router.get("/get-weekly-atendence",primaryValidater,PermittedToSuperAdminAndHR,tryCatchMiddleware(getWeeklyAttendanceGraph))
 router.get("/custom-dates",primaryValidater,PermittedToSuperAdminAndHR,tryCatchMiddleware(getCustomDateDetails))
 router.get("/todays-attendence",primaryValidater,PermittedToSuperAdminAndHR,tryCatchMiddleware(getTodaysAttendanceDetailsForDashboard))
+
+
+//settings
+
+router.put(`/change-image/:id`,tryCatchMiddleware(changeProfilePic))
 
 
 //upload files

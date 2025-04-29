@@ -19,28 +19,68 @@ export const createHoliday = async (req, res, next) => {
     sendResponse(res, 200, newHoliday);
 };
 
-export const getAllHolidays = async (req, res, next) => {
-    const { page = 1, limit = 10, name,filterType } = req.query;
+// export const getAllHolidays = async (req, res, next) => {
+//     const { page = 1, limit = 10, name,filterType } = req.query;
 
 
-    const currentDate = new Date();
+//     const currentDate = new Date();
 
 
-    const filter = name ? { holidayName: { $regex: name, $options: "i" } } : {};
+//     const filter = name ? { holidayName: { $regex: name, $options: "i" } } : {};
    
-    if (filterType === 'past') {
+//     if (filterType === 'past') {
+//         filter.holidayDate = { $lt: currentDate };
+//     } else if (filterType === 'upcoming') {
+//         filter.holidayDate = { $gte: currentDate };
+//     }
+
+
+//     const holidays = await holidayModel.find(filter)
+//         .skip((page - 1) * limit)
+//         .limit(parseInt(limit));
+
+//     sendResponse(res, 200, holidays);
+// };
+
+export const getAllHolidays = async (req, res, next) => {
+      const { page = 1, limit = 10, name, filterType } = req.query;
+  
+      const currentDate = new Date();
+  
+      const filter = {};
+  
+      if (name) {
+        filter.holidayName = { $regex: name, $options: "i" };
+      }
+  
+      if (filterType === 'past') {
         filter.holidayDate = { $lt: currentDate };
-    } else if (filterType === 'upcoming') {
+      } else if (filterType === 'upcoming') {
         filter.holidayDate = { $gte: currentDate };
-    }
-
-
-    const holidays = await holidayModel.find(filter)
+      }
+  
+      const total = await holidayModel.countDocuments(filter); // total count
+  
+      const holidays = await holidayModel.find(filter)
         .skip((page - 1) * limit)
-        .limit(parseInt(limit));
+        .limit(parseInt(limit))
+        .sort({ holidayDate: 1 }); // optional: sort by date ascending
+  
+      const totalPages = Math.ceil(total / limit);
+  
+      sendResponse(res, 200, {
+        holidays,
+        pagination: {
+          total,
+          totalPages,
+          currentPage: parseInt(page),
+        
+        }
+      });
+   
+  }
+  
 
-    sendResponse(res, 200, holidays);
-};
 
 export const getHolidayById = async (req, res, next) => {
     const holiday = await holidayModel.findById(req.params.id);

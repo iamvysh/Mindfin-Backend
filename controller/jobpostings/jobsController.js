@@ -85,7 +85,27 @@ export const getAllJobs = async (req, res, next) => {
     
   };
   
-
+  export const getAllJobsforModal = async (req, res, next) => {
+    try {
+      const { type, branch: userBranch } = req.user;
+  
+      const filter = {};
+  
+      // If HR, restrict jobs to their branch
+      if (type === 'HR') {
+        filter.branch = userBranch;
+      }
+  
+      const jobs = await JobModel.find(filter).populate("branch designation");
+  
+      sendResponse(res, 200, 
+        jobs,
+      );
+    } catch (error) {
+      next(error);
+    }
+  };
+  
 
 // Get a single job by ID
 export const getJobById = async (req, res, next) => {

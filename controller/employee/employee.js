@@ -995,3 +995,22 @@ export const whoAmI = async (req,res,next) =>{
 
     sendResponse(res,200,employee)
 }
+
+
+export const changeProfilePic = async (req,res,next) =>{
+
+    const body = req.body
+
+    const {id} = req.params
+
+
+    
+    const employee = await employeeModel.findByIdAndUpdate(id,{$set :body},{new:true})
+
+    if(!employee){
+        return next (new CustomError("Employee not found",400))
+    }
+
+    sendResponse(res,200,employee)
+
+}

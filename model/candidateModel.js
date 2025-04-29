@@ -22,7 +22,7 @@
         },
         type:{
             type:String,
-            enum:["WFH","WFO"]
+            enum:["WFH","WFO","HYBRID"]
         },
         resume:{
             type:[String]
@@ -32,7 +32,7 @@
             enum:["INPROGRESS","SELECTED","REJECTED"]
         }
 
-    })
+    },{timestamps:true})
 
     export default model("candidate", candidate);    
 
