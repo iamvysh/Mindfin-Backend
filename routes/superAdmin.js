@@ -3,6 +3,7 @@ import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { createBranch, deleteBranch, getAllBranches, getBranchById, updateBranch } from "../controller/branch/branch.js";
 import { createDesignation, deleteDesignation, getAllDesignations, getDesignationById, updateDesignation } from "../controller/designation/designation.js";
 import { createTax, deleteTax, getAllTaxes, getTaxById, updateTax } from "../controller/payrolls/taxType.js";
+import { primaryValidater } from "../middleware/auth.js";
 const router = express.Router();
 
 
@@ -30,7 +31,7 @@ router.put("/delete-designation/:id",tryCatchMiddleware(deleteDesignation))
 //tax
 
 router.post("/create-tax",tryCatchMiddleware(createTax))
-router.get("/get-all-tax",tryCatchMiddleware(getAllTaxes))
+router.get("/get-all-tax",primaryValidater,tryCatchMiddleware(getAllTaxes))
 router.get("/get-tax/:id",tryCatchMiddleware(getTaxById))
 router.put("/update-tax/:id",tryCatchMiddleware(updateTax))
 router.delete("/delete-tax/:id",tryCatchMiddleware(deleteTax))

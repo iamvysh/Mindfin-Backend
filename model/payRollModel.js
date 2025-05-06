@@ -17,10 +17,14 @@ const payRoll = new Schema({
   paymentYear: {
     type: String,
   },
+  status:{
+    type: String,
+    enum:["PAID","PENDING"]
+  },
   branch: {
     type: Schema.Types.ObjectId,
     ref: "branch",
   },
-});
+},{timestamps:true});
 
 export default model("payRoll", payRoll);

@@ -1,9 +1,14 @@
+import moment from "moment-timezone";
+import transport from "../../config/nodemailer.js";
 import employeeModel from "../../model/employeeModel.js";
 import leavesModel from "../../model/leavesModel.js";
 import CustomError from "../../utils/customError.js";
+import { leaveApprovel, leaveReject } from "../../utils/emailTemplate.js";
 import sendResponse from "../../utils/sendResponse.js";
+import { loadEnv } from "../../config/envConfig.js";
 
 
+loadEnv()
 
 
 
@@ -22,7 +27,7 @@ export const createLeave = async (req, res, next) => {
     }
 
     const newLeave = await leavesModel.create(req.body);
-    sendResponse(res, 201, newLeave);
+    sendResponse(res, 200, newLeave);
 };
 
 // Get all leaves with search by name and pagination
@@ -223,7 +228,7 @@ export const getAllLeaves = async (req, res, next) => {
         sendResponse(res, 200, {
             data: leaves,
             pagination: {
-                page: Number(page),
+                currentPage: Number(page),
                 limit: Number(limit),
                 total,
                 totalPages
@@ -259,11 +264,14 @@ export const getLeaveById = async (req, res, next) => {
 
 // Update a leave by ID
 export const updateLeave = async (req, res, next) => {
+
+    const {_id} = req.user
     const { id } = req.params;
     const updateData = req.body;
-
+    
+ 
         // Check if the leave exists
-        const leave = await leavesModel.findById(id);
+        const leave = await leavesModel.findById(id).populate('employee');
         if (!leave) {
             return next(new CustomError("Leave not found", 404));
         }
@@ -280,9 +288,63 @@ export const updateLeave = async (req, res, next) => {
             return next(new CustomError("Leave already exists for this employee and date range", 400));
         }
 
+
+           // Step 2: Detect status change
+           const prevStatus = leave?.leaveStatus;
+           const newStatus = updateData?.leaveStatus;
+           const employeeEmail = exists?.employee?.professionalEmail;
+        //    const employeeEmail = exists?.employee?.email;
+        //    const employeeEmail = 'iamvyshnav99@gmail.com';
+
+          
+
         // Update the leave
-        const updatedLeave = await leavesModel.findByIdAndUpdate(id, updateData, { new: true });
+        const updatedLeave = await leavesModel.findByIdAndUpdate(id, updateData, { new: true }).populate("decisionMadeBy");
+
+        
+        if (
+            prevStatus !== newStatus &&
+            (newStatus === "APPROVED" || newStatus === "REJECTED")
+        ){
+
+            const formattedStartDate = moment(updateData?.startDate).format("D - MM - YYYY");
+            const formattedEndDate = moment(updateData?.endDate).format("D - MM - YYYY");
+            const officer = await employeeModel.findById(_id).populate("designation")
+
+            await transport.sendMail({
+            from: process.env.NODEMAILER_EMAIL,
+            to: employeeEmail,
+            headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+            subject: `Your Leave Request has been ${newStatus}`,
+            html:
+            
+            newStatus === "APPROVED"
+            ? 
+            leaveApprovel({
+                employeename: leave?.employee?.firstName,
+                startDate: formattedStartDate,
+                endDate: formattedEndDate,
+                Officername: officer?.firstName,
+                officerDesignation: officer?.designation?.designation
+              })
+            // leaveApprovel(leave?.employee?.firstName,formattedStartDate,formattedEndDate,officer?.firstName,officer?.designation?.designation)
+            : 
+            leaveReject({
+                employeename: leave?.employee?.firstName,
+                startDate: formattedStartDate,
+                // endDate: formattedEndDate,
+                Officername: officer?.firstName,
+                officerDesignation: officer?.designation?.designation
+              })
+            // leaveReject(leave?.employee?.firstName,formattedStartDate,officer?.firstName,officer?.designation?.designation),
+        });
+
+        }
+
         sendResponse(res, 200, updatedLeave);
+
+
+
     
 };
 

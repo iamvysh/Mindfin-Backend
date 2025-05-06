@@ -15,7 +15,7 @@ export const createTax = async (req, res, next) => {
         }
 
         const newTax = await taxModel.create({ taxType, branch, value });
-        sendResponse(res, 201, { message: "Tax created successfully", data: newTax });
+        sendResponse(res, 200, { message: "Tax created successfully", data: newTax });
     
 };
 

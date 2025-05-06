@@ -350,7 +350,7 @@ export const leaveReject = ({employeename,startDate,Officername,officerDesignati
     <div class="content">
         <p>Dear ${employeename},</p>
         
-        <p>I hope you're doing well. This email is to inform you that your leave application for ${startDate} has been reviewed and, unfortunately, we are unable to approve it at this time due to [Reason for denial, e.g., high workload, staffing constraints, etc.]</p>
+        <p>I hope you're doing well. This email is to inform you that your leave application for ${startDate} has been reviewed and, unfortunately, we are unable to approve it at this time due to some reasons</p>
         
         <div class="signature">
             <p>Best regards,<br>

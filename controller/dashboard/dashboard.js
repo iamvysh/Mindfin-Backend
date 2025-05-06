@@ -1,4 +1,5 @@
 
+import mongoose from 'mongoose';
 import attendenceModel from '../../model/attendenceModel.js';
 import candidateModel from '../../model/candidateModel.js';
 import employeeModel from '../../model/employeeModel.js';
@@ -55,76 +56,271 @@ export const getBranchData = async (req, res, next) => {
 
 
 
+// export const getWeeklyAttendanceGraph = async (req, res, next) => {
+//     try {
+//         const { branch, type } = req.user;
+//         // const timezone = "Asia/Kolkata"; 
+//         // const today = moment().tz(timezone).startOf('day');
+
+//         // let employeeFilter = {};
+//         // let attendanceFilter = {
+//         //     createdAt: { $gte: moment(today).subtract(6, "days").toDate(), $lte: today.toDate() }
+//         // };
+
+//         const today = moment.utc().startOf('day'); 
+//          let employeeFilter = {};
+//          let attendanceFilter = {
+//   createdAt: {
+//     $gte: moment.utc(today).subtract(6, "days").toDate(), // 6 days ago in UTC
+//     $lte: moment.utc().endOf('day').toDate()// today in UTC
+//   }
+// };
+
+//         if (type === "HR") {
+//             employeeFilter = { branch: branch };
+//             attendanceFilter = { ...attendanceFilter, "employee.branch": branch };
+//         }
+
+//         const totalEmployees = await employeeModel.countDocuments(employeeFilter);
+//         console.log(attendanceFilter,"myre");
+        
+//         const attendanceData = await attendenceModel.aggregate([
+//             {
+//                 $match: attendanceFilter
+//             },
+//             {
+//                 $group: {
+//                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+//                     totalPresent: {
+//                         $sum: {
+//                             $cond: [{ $in: ["$status", ["ONTIME", "LATE"]] }, 1, 0]
+//                         }
+//                     },
+//                     totalHalfDay: {
+//                         $sum: {
+//                             $cond: [{ $eq: ["$status", "HALFDAY"] }, 1, 0]
+//                         }
+//                     },
+//                     totalLeave: {
+//                         $sum: {
+//                             $cond: [{ $eq: ["$status", "ABSENT"] }, 1, 0]
+//                         }
+//                     }
+//                 }
+//             },
+//             {
+//                 $sort: { _id: 1 }
+//             }
+//         ]);
+
+//         // Format response
+//         const graphData = [];
+
+//         console.log(attendanceData,"amo");
+        
+//         for (let i = 6; i >= 0; i--) {
+//             const date = moment(today).subtract(i, "days").format("YYYY-MM-DD");
+//             const data = attendanceData.find(d => d._id === date);
+
+//             const present = data ? data.totalPresent : 0;
+//             const halfDay = data ? data.totalHalfDay : 0;
+//             const leave = data ? data.totalLeave : totalEmployees - present - halfDay;
+
+//             graphData.push({
+//                 date,
+//                 attendance: (present / totalEmployees) * 100 || 0,
+//                 halfDay: (halfDay / totalEmployees) * 100 || 0,
+//                 leave: (leave / totalEmployees) * 100 || 0
+//             });
+//         }
+
+
+//         console.log(graphData);
+        
+//         res.status(200).json(graphData);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: "Server error" });
+//     }
+// };
+
+// export const getWeeklyAttendanceGraph = async (req, res, next) => {
+//     try {
+//         const { branch, type } = req.user;
+
+//         // Define UTC start and end times
+//         const startUTC = moment.utc().startOf('day').subtract(6, 'days').set({ hour: 5, minute: 30 }).toDate();
+//         const endUTC = moment.utc().endOf('day').toDate();
+
+//         let employeeFilter = {};
+//         let attendanceFilter = {
+//             createdAt: {
+//                 $gte: startUTC,
+//                 $lte: endUTC
+//             }
+//         };
+
+//         if (type === "HR") {
+//             employeeFilter = { branch };
+//             attendanceFilter = { ...attendanceFilter, "employee.branch": branch };
+//         }
+
+//         const totalEmployees = await employeeModel.countDocuments(employeeFilter);
+
+//         const attendanceData = await attendenceModel.aggregate([
+//             {
+//                 $match: attendanceFilter
+//             },
+//             {
+//                 $group: {
+//                     _id: {
+//                         $dateToString: {
+//                             format: "%Y-%m-%d",
+//                             date: "$createdAt"
+//                         }
+//                     },
+//                     totalPresent: {
+//                         $sum: {
+//                             $cond: [{ $in: ["$status", ["ONTIME", "LATE"]] }, 1, 0]
+//                         }
+//                     },
+//                     totalHalfDay: {
+//                         $sum: {
+//                             $cond: [{ $eq: ["$status", "HALFDAY"] }, 1, 0]
+//                         }
+//                     },
+//                     totalLeave: {
+//                         $sum: {
+//                             $cond: [{ $eq: ["$status", "ABSENT"] }, 1, 0]
+//                         }
+//                     }
+//                 }
+//             },
+//             { $sort: { _id: 1 } }
+//         ]);
+
+//         const graphData = [];
+
+//         for (let i = 6; i >= 0; i--) {
+//             const date = moment.utc().subtract(i, 'days').format("YYYY-MM-DD");
+//             const data = attendanceData.find(d => d._id === date);
+
+//             const present = data ? data.totalPresent : 0;
+//             const halfDay = data ? data.totalHalfDay : 0;
+//             const leave = data ? data.totalLeave : totalEmployees - present - halfDay;
+
+//             graphData.push({
+//                 date,
+//                 attendance: (present / totalEmployees) * 100 || 0,
+//                 halfDay: (halfDay / totalEmployees) * 100 || 0,
+//                 leave: (leave / totalEmployees) * 100 || 0
+//             });
+//         }
+
+//         res.status(200).json(graphData);
+//     } catch (error) {
+//         console.error(error);
+//         res.status(500).json({ message: "Server error" });
+//     }
+// };
+
+
+
 export const getWeeklyAttendanceGraph = async (req, res, next) => {
-    try {
-        const { branch, type } = req.user;
-        const timezone = "Asia/Kolkata"; 
-        const today = moment().tz(timezone).startOf('day');
+  try {
+    const { branch, type } = req.user;
 
-        let employeeFilter = {};
-        let attendanceFilter = {
-            createdAt: { $gte: moment(today).subtract(6, "days").toDate(), $lte: today.toDate() }
-        };
+    // Define UTC start and end times
+    const startUTC = moment.utc().startOf("day").subtract(6, "days").set({ hour: 5, minute: 30 }).toDate();
+    const endUTC = moment.utc().endOf("day").toDate();
 
-        if (type === "HR") {
-            employeeFilter = { branch: branch };
-            attendanceFilter = { ...attendanceFilter, "employee.branch": branch };
-        }
-
-        const totalEmployees = await employeeModel.countDocuments(employeeFilter);
-
-        const attendanceData = await attendenceModel.aggregate([
-            {
-                $match: attendanceFilter
-            },
-            {
-                $group: {
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
-                    totalPresent: {
-                        $sum: {
-                            $cond: [{ $in: ["$status", ["ONTIME", "LATE"]] }, 1, 0]
-                        }
-                    },
-                    totalHalfDay: {
-                        $sum: {
-                            $cond: [{ $eq: ["$status", "HALFDAY"] }, 1, 0]
-                        }
-                    },
-                    totalLeave: {
-                        $sum: {
-                            $cond: [{ $eq: ["$status", "ABSENT"] }, 1, 0]
-                        }
-                    }
-                }
-            },
-            {
-                $sort: { _id: 1 }
-            }
-        ]);
-
-        // Format response
-        const graphData = [];
-        for (let i = 6; i >= 0; i--) {
-            const date = moment(today).subtract(i, "days").format("YYYY-MM-DD");
-            const data = attendanceData.find(d => d._id === date);
-
-            const present = data ? data.totalPresent : 0;
-            const halfDay = data ? data.totalHalfDay : 0;
-            const leave = data ? data.totalLeave : totalEmployees - present - halfDay;
-
-            graphData.push({
-                date,
-                attendance: (present / totalEmployees) * 100 || 0,
-                halfDay: (halfDay / totalEmployees) * 100 || 0,
-                leave: (leave / totalEmployees) * 100 || 0
-            });
-        }
-
-        res.status(200).json(graphData);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ message: "Server error" });
+    let employeeFilter = {};
+    if (type === "HR") {
+      employeeFilter = { branch };
     }
+
+    const totalEmployees = await employeeModel.countDocuments(employeeFilter);
+
+    const attendanceData = await attendenceModel.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: startUTC,
+            $lte: endUTC
+          }
+        }
+      },
+      {
+        $lookup: {
+          from: "employees", // use the actual collection name
+          localField: "employee",
+          foreignField: "_id",
+          as: "employee"
+        }
+      },
+      {
+        $unwind: "$employee"
+      },
+      ...(type === "HR"
+        ? [
+            {
+              $match: {
+                "employee.branch": { $in: [new mongoose.Types.ObjectId(branch)] } // branch is array in employee model
+              }
+            }
+          ]
+        : []),
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt"
+            }
+          },
+          totalPresent: {
+            $sum: {
+              $cond: [{ $in: ["$status", ["ONTIME", "LATE"]] }, 1, 0]
+            }
+          },
+          totalHalfDay: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "HALFDAY"] }, 1, 0]
+            }
+          },
+          totalLeave: {
+            $sum: {
+              $cond: [{ $eq: ["$status", "ABSENT"] }, 1, 0]
+            }
+          }
+        }
+      },
+      { $sort: { _id: 1 } }
+    ]);
+
+    const graphData = [];
+
+    for (let i = 6; i >= 0; i--) {
+      const date = moment.utc().subtract(i, "days").format("YYYY-MM-DD");
+      const data = attendanceData.find((d) => d._id === date);
+
+      const present = data ? data.totalPresent : 0;
+      const halfDay = data ? data.totalHalfDay : 0;
+      const leave = data ? data.totalLeave : totalEmployees - present - halfDay;
+
+      graphData.push({
+        date,
+        attendance: totalEmployees ? (present / totalEmployees) * 100 : 0,
+        halfDay: totalEmployees ? (halfDay / totalEmployees) * 100 : 0,
+        leave: totalEmployees ? (leave / totalEmployees) * 100 : 0
+      });
+    }
+
+    res.status(200).json(graphData);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ message: "Server error" });
+  }
 };
 
 
@@ -156,7 +352,7 @@ export const getCustomDateDetails = async (req, res, next) => {
             employee: { $in: employeeIds },
             createdAt: { $gte: startDate, $lte: end },
             status: "ABSENT",
-        }).populate("employee","firstName lastName");
+        }).populate("employee","firstName lastName profileImg");
 
         // Fetch special holidays
         const holidays = await holidayModel.find({
@@ -172,7 +368,7 @@ export const getCustomDateDetails = async (req, res, next) => {
                     { $eq: [{ $month: "$DOB" }, moment.utc(date).month() + 1] }
                 ]
             }
-        }).select("firstName lastName");
+        }).select("firstName lastName DOB profileImg");
 
         res.status(200).json({
             leaves,
@@ -214,7 +410,14 @@ export const getTodaysAttendanceDetailsForDashboard = async (req, res, next) => 
 
         // Fetch today's attendance details (limit to 12 documents)
         const attendanceDetails = await attendenceModel.find(attendanceFilter)
-            .populate('employee', 'firstName lastName')
+            // .populate('employee',)
+            .populate({
+                path: "employee",
+                populate: [
+                    // { path: "branch" },
+                    { path: "designation" }
+                ]
+            })
             .limit(12);
   
             console.log(attendanceDetails,"attendanceDetails");

@@ -8,15 +8,7 @@ import sendResponse from "../../utils/sendResponse.js";
 
 export const getAllPayRolls = async (req, res, next) => {
 
-    //   const {branch,type} =req.user
-
-    //     const { page = 1, limit = 10 } = req.query;
-    //     const payRolls = await payRollModel.find().populate("designation designation")
-    //         .skip((page - 1) * limit)
-    //         .limit(Number(limit));
-    //     const total = await payRollModel.countDocuments();
-
-    //     sendResponse(res, 200, { payRolls, total, page: Number(page), limit: Number(limit) });
+   
     const { branch, type } = req.user;
     const { page = 1, limit = 10 } = req.query;
 
@@ -25,16 +17,19 @@ export const getAllPayRolls = async (req, res, next) => {
 
     const payRolls = await payRollModel
       .find(filter)
+      .sort({createdAt:-1})
       .populate("designation","designation")
       .skip((page - 1) * limit)
       .limit(Number(limit));
 
     const total = await payRollModel.countDocuments(filter);
+    const totalPages = Math.ceil(total / limit);
 
     sendResponse(res, 200, {
       payRolls,
       total,
-      page: Number(page),
+      totalPages,
+      currentPage: Number(page),
       limit: Number(limit),
     })
 };
@@ -108,15 +103,54 @@ export const createPayRoll = async (req, res, next) => {
   
 
 
-export const updatePayRoll = async (req, res, next) => {
-        const { id } = req.params;
-        const updatedPayRoll = await payRollModel.findByIdAndUpdate(id, req.body, { new: true });
+// export const updatePayRoll = async (req, res, next) => {
+//         const { id } = req.params;
+//         const updatedPayRoll = await payRollModel.findByIdAndUpdate(id, req.body, { new: true });
 
-        if (!updatedPayRoll) {
-            return next(new CustomError("Payroll record not found", 400));
-        }
-        sendResponse(res, 200, updatedPayRoll);
+//         if (!updatedPayRoll) {
+//             return next(new CustomError("Payroll record not found", 400));
+//         }
+//         sendResponse(res, 200, updatedPayRoll);
     
+// };
+
+
+export const updatePayRoll = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { designation, branch, paymentMonth, paymentYear } = req.body;
+
+    // Check for existing record with same designation, branch, month, and year, excluding current one
+    const existing = await payRollModel.findOne({
+      _id: { $ne: id }, // Exclude the document being updated
+      designation,
+      branch,
+      paymentMonth,
+      paymentYear,
+    });
+
+    if (existing) {
+      return next(
+        new CustomError(
+          "Payroll with this designation, branch, month, and year already exists.",
+          400
+        )
+      );
+    }
+
+    // Proceed to update if no conflict
+    const updatedPayRoll = await payRollModel.findByIdAndUpdate(id, req.body, {
+      new: true,
+    });
+
+    if (!updatedPayRoll) {
+      return next(new CustomError("Payroll record not found", 400));
+    }
+
+    sendResponse(res, 200, updatedPayRoll);
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const deletePayRoll = async (req, res, next) => {

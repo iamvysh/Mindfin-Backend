@@ -39,11 +39,19 @@ const paySlip = new Schema({
     type: Schema.Types.ObjectId,
     ref: "tax",
   },
+  taxAmount:{
+    type: Number,
+
+  },
   employeePension: {
     type: Number,
   },
   netSalary: {
     type: Number,
+  },
+  totalDeduction:{
+    type: Number,
+
   },
   month: {
     type: String,
@@ -67,6 +75,6 @@ const paySlip = new Schema({
     type: Number,
     required: true,
   },
-});
+},{timestamps:true});
 
 export default model("paySlip", paySlip);

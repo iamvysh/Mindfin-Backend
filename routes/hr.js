@@ -2,7 +2,7 @@ import express from "express";
 import { addEmployee, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, generatePassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyGeneratePassword, verifyOtp, whoAmI } from "../controller/employee/employee.js";
 import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { createPayRoll, deletePayRoll, getAllPayRolls, getPayRollById, updatePayRoll } from "../controller/payrolls/payRoll.js";
-import { createPaySlip, deletePaySlip, getAllPaySlips, getPaySlipById, updatePaySlip } from "../controller/payrolls/paySlip.js";
+import { createPaySlip, deletePaySlip, getAllPaySlips, getEmployeeCounts, getMonthlySalaryTotals, getPaySlipById, updatePaySlip } from "../controller/payrolls/paySlip.js";
 import { createJob, deleteJob, getAllJobs, getAllJobsforModal, getJobById, updateJob, updatePublish } from "../controller/jobpostings/jobsController.js";
 import { createCandidate, deleteCandidate, getAllCandidates, getCandidateById, updateCandidate } from "../controller/jobpostings/candidates.js";
 import { departmentSpecificEmployees, getAllDepartmentEmployees } from "../controller/department/department.js";
@@ -52,16 +52,18 @@ router.post('/create-pay-roll',primaryValidater,tryCatchMiddleware(createPayRoll
 router.get("/get-all-pay-roll",primaryValidater,tryCatchMiddleware(getAllPayRolls))
 router.get("/get-payroll/:id",tryCatchMiddleware(getPayRollById))
 router.put("/update-payroll/:id",tryCatchMiddleware(updatePayRoll))
-router.delete("/delete-payroll",tryCatchMiddleware(deletePayRoll))
+router.delete("/delete-payroll/:id",tryCatchMiddleware(deletePayRoll))
+router.get("/get-employee-count",primaryValidater,tryCatchMiddleware(getEmployeeCounts))
+router.get("/get-salary-details",primaryValidater,tryCatchMiddleware(getMonthlySalaryTotals))
 
 
 //pay slip
 
 router.post('/create-pay-slip',tryCatchMiddleware(createPaySlip))
-router.get("/get-all-pay-slip",tryCatchMiddleware(getAllPaySlips))
+router.get("/get-all-pay-slip",primaryValidater,tryCatchMiddleware(getAllPaySlips))
 router.get("/get-payslip/:id",tryCatchMiddleware(getPaySlipById))
 router.put("/update-payslip/:id",tryCatchMiddleware(updatePaySlip))
-router.delete("/delete-payslip",tryCatchMiddleware(deletePaySlip))
+router.delete("/delete-payslip/:id",tryCatchMiddleware(deletePaySlip))
 
 
 
@@ -104,8 +106,8 @@ router.delete("/delete-holiday/:id",tryCatchMiddleware(deleteHoliday))
 router.post("/create-leave",tryCatchMiddleware(createLeave))
 router.get("/get-all-leaves",primaryValidater,tryCatchMiddleware(getAllLeaves))
 router.get("/get-leave/:id",tryCatchMiddleware(getLeaveById))
-router.put("/update-leave/:id",tryCatchMiddleware(updateLeave))
-router.delete("/delete=leave/:id",tryCatchMiddleware(deleteLeave))
+router.put("/update-leave/:id",primaryValidater,tryCatchMiddleware(updateLeave))
+router.delete("/delete-leave/:id",tryCatchMiddleware(deleteLeave))
 
 
 //attendence
