@@ -99,7 +99,7 @@ export const welcomeEmployee = ({ name,email }) => {
             <p>We're glad to have you onboard! You're already on your way to creating beautiful journey with us.</p>
             <p>We are inviting you to join our team by creating password and login to respective dashboard with this user id <a href="mailto:rahul@mindfin.com">${email}</a>.</p>
             <p>Thanks,<br>Mindfin Team</p>
-            <a href="#" class="button">Generate Password</a>
+            <a href="https://mindfin-frontend.vercel.app/generate-password" class="button">Generate Password</a>
         </div>
         <div class="footer">
             <p>This email was sent to <a href="mailto:hr@mindfin.com">hr@mindfin.com</a>. You have received this mail because your e-mail ID is registered with us. This is a system-generated e-mail regarding your Mindfin account preferences, please don't reply to this message.</p>

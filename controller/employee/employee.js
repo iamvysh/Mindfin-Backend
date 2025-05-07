@@ -21,7 +21,6 @@ loadEnv()
 
 export const addEmployee = async (req,res,next) =>{
 
-
     const { email, phone, firstName, lastName, designation, employeeId ,professionalEmail} = req.body;
 
     // Check if the email already exists
@@ -308,8 +307,8 @@ export const forgotPassword = async(req,res,next) =>{
     const {email} = req.body
 
 
-    // let isEmployeeExist = await employeeModel.findOne({professionalEmail:email})
-    let isEmployeeExist = await employeeModel.findOne({email})
+    let isEmployeeExist = await employeeModel.findOne({professionalEmail:email})
+    // let isEmployeeExist = await employeeModel.findOne({email})
 
     if(!isEmployeeExist){
         return next (new CustomError("employee not found",400))
@@ -326,8 +325,8 @@ export const forgotPassword = async(req,res,next) =>{
 
     const encryptedOtp = await hashPassword(OTP);
 
-    const existingOtp = await otpModel.findOne({ email: isEmployeeExist?.email });
-    // const existingOtp = await otpModel.findOne({ email: isEmployeeExist?.professionalEmail });
+    // const existingOtp = await otpModel.findOne({ email: isEmployeeExist?.email });
+    const existingOtp = await otpModel.findOne({ email: isEmployeeExist?.professionalEmail });
     if (existingOtp) {
         return sendResponse(res, 200, "OTP sent successfully");
     }
@@ -369,8 +368,8 @@ export const reSendOtpForgotPassword = async(req,res,next)=>{
          } 
          await otpModel.deleteMany({email})
 
-         // let isEmployeeExist = await employeeModel.findOne({professionalEmail:email})
-         let isEmployeeExist = await employeeModel.findOne({email})
+         let isEmployeeExist = await employeeModel.findOne({professionalEmail:email})
+        //  let isEmployeeExist = await employeeModel.findOne({email})
 
          if(!isEmployeeExist){
              return next (new CustomError("employee not found",400))
@@ -426,8 +425,8 @@ export const reSendOtpGeneratePassword = async(req,res,next)=>{
          } 
          await otpModel.deleteMany({email})
 
-         // let isEmployeeExist = await employeeModel.findOne({professionalEmail:email})
-         let isEmployeeExist = await employeeModel.findOne({email})
+         let isEmployeeExist = await employeeModel.findOne({professionalEmail:email})
+        //  let isEmployeeExist = await employeeModel.findOne({email})
 
          if(!isEmployeeExist){
              return next (new CustomError("employee not found",400))
@@ -895,8 +894,8 @@ export const loginEmployee = async (req, res, next) => {
         // console.log();
         
         // Check if employee exists
-        // const employee = await employeeModel.findOne({ professionalEmail:email }).populate("designation","designation");
-        const employee = await employeeModel.findOne({ email:email }).populate("designation","designation");
+        const employee = await employeeModel.findOne({ professionalEmail:email }).populate("designation","designation");
+        // const employee = await employeeModel.findOne({ email:email }).populate("designation","designation");
         console.log(employee?.designation?.designation,"logged");
         
         if (!employee) {
@@ -923,8 +922,8 @@ export const loginEmployee = async (req, res, next) => {
         if (employee.branch.length > 1) {
            console.log("hyyyy");
            
-    //   let  populateBranches = await employeeModel.findOne({ professionalEmail:email }).populate("branch","name")
-      let  populateBranches = await employeeModel.findOne({ email:email }).populate("branch","name")
+      let  populateBranches = await employeeModel.findOne({ professionalEmail:email }).populate("branch","name")
+    //   let  populateBranches = await employeeModel.findOne({ email:email }).populate("branch","name")
 
             // res.cookie("professionalEmail", employee.professionalEmail, { httpOnly: true });
             // res.cookie("employeeId", employee._id.toString(), { httpOnly: true });
@@ -952,8 +951,8 @@ export const branchSelection = async (req, res, next) => {
         const { email, branch } = req.body;
         console.log(email,branch,"beee");
         
-        // const employee = await employeeModel.findOne({ professionalEmail:email }).populate("designation","designation");
-        const employee = await employeeModel.findOne({ email:email }).populate("designation","designation");
+        const employee = await employeeModel.findOne({ professionalEmail:email }).populate("designation","designation");
+        // const employee = await employeeModel.findOne({ email:email }).populate("designation","designation");
         if (!employee) {
             return next(new CustomError("Employee not found", 404));
         }
