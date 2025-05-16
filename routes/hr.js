@@ -1,5 +1,5 @@
 import express from "express";
-import { addEmployee, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, generatePassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyGeneratePassword, verifyOtp, whoAmI } from "../controller/employee/employee.js";
+import { addEmployee, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, generatePassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, loginToMobile, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyGeneratePassword, verifyOtp, whoAmI } from "../controller/employee/employee.js";
 import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { createPayRoll, deletePayRoll, getAllPayRolls, getPayRollById, updatePayRoll } from "../controller/payrolls/payRoll.js";
 import { createPaySlip, deletePaySlip, getAllPaySlips, getEmployeeCounts, getMonthlySalaryTotals, getPaySlipById, updatePaySlip } from "../controller/payrolls/paySlip.js";
@@ -7,8 +7,8 @@ import { createJob, deleteJob, getAllJobs, getAllJobsforModal, getJobById, updat
 import { createCandidate, deleteCandidate, getAllCandidates, getCandidateById, updateCandidate } from "../controller/jobpostings/candidates.js";
 import { departmentSpecificEmployees, getAllDepartmentEmployees } from "../controller/department/department.js";
 import { createHoliday, deleteHoliday, getAllHolidays, getHolidayById, updateHoliday } from "../controller/holiday/holiday.js";
-import { createLeave, deleteLeave, getAllLeaves, getLeaveById, updateLeave } from "../controller/leaves/leaveController.js";
-import { calculateMonthlyAttendance, createAttendance, deleteAttendance, getAllAttendance, getAttendanceById, updateAttendance } from "../controller/attedence/attendence.js";
+import { AddLeave, createLeave, deleteLeave, getAllLeaves, getLeaveById, getLeavesByType, getLeaveSummary, updateLeave } from "../controller/leaves/leaveController.js";
+import { calculateMonthlyAttendance, checkOutAttendance, createAttendance, deleteAttendance, getAllAttendance, getAttendanceById, getMonthlyAttendanceForEmployee, getPaginatedAttendance, getTodaysAttendanceForEmployee, updateAttendance } from "../controller/attedence/attendence.js";
 import { getBranchData, getCustomDateDetails, getTodaysAttendanceDetailsForDashboard, getWeeklyAttendanceGraph } from "../controller/dashboard/dashboard.js";
 import { PermittedToSuperAdminAndHR, primaryValidater } from "../middleware/auth.js";
 import { downLoadBlob, upload } from "../controller/upload/upload.js";
@@ -26,10 +26,13 @@ router.post("/resent-otp/generate-password",tryCatchMiddleware(reSendOtpGenerate
 router.post("/resent-otp/forgot-password",tryCatchMiddleware(reSendOtpForgotPassword))
 router.get("/getUser",primaryValidater, tryCatchMiddleware(whoAmI))
 
+
+
 //auth
 
 router.post("/login",tryCatchMiddleware(loginEmployee))
 router.post("/branch-login",tryCatchMiddleware(branchSelection))
+router.post("/login-to-mobile",tryCatchMiddleware(loginToMobile))
 
 
 
@@ -108,7 +111,9 @@ router.get("/get-all-leaves",primaryValidater,tryCatchMiddleware(getAllLeaves))
 router.get("/get-leave/:id",tryCatchMiddleware(getLeaveById))
 router.put("/update-leave/:id",primaryValidater,tryCatchMiddleware(updateLeave))
 router.delete("/delete-leave/:id",tryCatchMiddleware(deleteLeave))
-
+router.get("/get-leaves-summery",primaryValidater,tryCatchMiddleware(getLeaveSummary))
+router.get("/get-upcoming-past-leaves",primaryValidater,tryCatchMiddleware(getLeavesByType))
+router.post("/add-leave",primaryValidater,tryCatchMiddleware(AddLeave))
 
 //attendence
 
@@ -119,8 +124,10 @@ router.get("/get-attendence/:id",tryCatchMiddleware(getAttendanceById))
 router.put("/update-attendence/:id",tryCatchMiddleware(updateAttendance))
 router.delete("/delete-attendence/:id",tryCatchMiddleware(deleteAttendance))
 router.get("/get-monthly-attendence",primaryValidater,tryCatchMiddleware(calculateMonthlyAttendance))
-
-
+router.put("/add-check-out",primaryValidater,tryCatchMiddleware(checkOutAttendance))
+router.get("/get-todays-attendenece",primaryValidater,tryCatchMiddleware(getTodaysAttendanceForEmployee))
+router.get("/get-recent-activity/:id",primaryValidater,tryCatchMiddleware(getPaginatedAttendance))
+router.get("/employee/month-attendence",primaryValidater,tryCatchMiddleware(getMonthlyAttendanceForEmployee))
 
 //dashboard
 

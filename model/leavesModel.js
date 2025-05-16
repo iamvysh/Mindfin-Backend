@@ -9,7 +9,7 @@
         },
         leaveType:{
             type:String,
-            // enum:["DATAENTRY","HR","SALES","CREDITMANAGER","BRANCHMANAGER"]
+            enum:["PAID","SICK"]
         },
         startDate:{
             type:Date

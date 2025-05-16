@@ -8,7 +8,7 @@ export const primaryValidater = async (req, res, next) => {
     try {
         // get header
         const authHeader = req.headers.authorization;
-   console.log(authHeader);
+  //  console.log(authHeader);
    
         if (!authHeader) {
             return next(new CustomError("unAuthorized", 401))
@@ -16,7 +16,7 @@ export const primaryValidater = async (req, res, next) => {
 
         // get token
         const token = authHeader.split(' ')[1]
-        console.log(token),"token";
+        // console.log(token),"token";
         
 
         const { _id, email, type, branch } = await JwtService.verify(token)

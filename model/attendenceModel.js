@@ -24,12 +24,18 @@ const attendence = new Schema ({
     workingHours:{
         type:String,
     } ,  
+    
     // shift:{
     //     type:String,
     //     enum:["DAY","NIGHT"]
 
     // },
-   
+   location: {
+        type: {
+            latitude: { type: Number },
+            longitude: { type: Number }
+        },
+    }
     
 
 

@@ -1014,3 +1014,63 @@ export const changeProfilePic = async (req,res,next) =>{
 
 }
 
+
+export const loginToMobile = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+        // console.log();
+        
+        // Check if employee exists
+        const employee = await employeeModel.findOne({ professionalEmail:email }).populate("designation","designation");
+        // const employee = await employeeModel.findOne({ email:email }).populate("designation","designation");
+        console.log(employee?.designation?.designation,"logged");
+        
+        if (!employee) {
+            return next(new CustomError("Invalid credentials", 401));
+        } 
+
+
+        const Password=await decryptData(employee?.password)
+
+        // Check password (assuming plain text, use bcrypt in real case)
+        if (Password !== password) {
+            return next(new CustomError("Invalid credentials", 401));
+        }
+         
+        // if (employee?.designation?.designation === 'SUPERADMIN'){
+
+            const token = await JwtService.sign({ _id: employee._id, email:email, type: employee?.designation?.designation, branch: employee?.branch[0] || null })
+                employee.password=null
+               return sendResponse(res, 200, { token, employee })
+
+        // }
+
+    //     // Check branch count
+    //     if (employee.branch.length > 1) {
+    //        console.log("hyyyy");
+           
+    //   let  populateBranches = await employeeModel.findOne({ professionalEmail:email }).populate("branch","name")
+    // //   let  populateBranches = await employeeModel.findOne({ email:email }).populate("branch","name")
+
+    //         // res.cookie("professionalEmail", employee.professionalEmail, { httpOnly: true });
+    //         // res.cookie("employeeId", employee._id.toString(), { httpOnly: true });
+    //         return sendResponse(res, 200, {
+    //             isMultipleBranch: true,
+    //             branches: populateBranches.branch,
+    //         });
+    //     }
+
+    //     // Generate token for single branch
+        
+
+    //     const token = await JwtService.sign({ _id: employee._id, email:email, type: employee?.designation?.designation, branch: employee?.branch[0] })
+
+
+    //     employee.password=null
+    //     return sendResponse(res, 200, { token, employee })
+    } catch (error) {
+        next(error);
+    }
+};
+
+

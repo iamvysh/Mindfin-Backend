@@ -45,6 +45,145 @@ export const createAttendance = async (req, res, next) => {
 
 
 
+export const createAttendanceByPhoto = async (req, res, next) => {
+        const { _id } = req.user;
+        const { checkIn, location } = req.body;
+
+        // Current IST date and time
+        const now = moment().tz("Asia/Kolkata");
+
+        // Construct full check-in datetime in IST
+        const checkInIST = moment.tz(`${now.format("YYYY-MM-DD")} ${checkIn}`, "Asia/Kolkata").toDate();
+
+        // Get start and end of the current day in IST for date-based comparison
+        const startOfDay = moment.tz(now.format("YYYY-MM-DD"), "Asia/Kolkata").startOf('day').toDate();
+        const endOfDay = moment.tz(now.format("YYYY-MM-DD"), "Asia/Kolkata").endOf('day').toDate();
+
+        // Check if attendance already exists for this employee today
+        const existing = await attendanceModel.findOne({
+            employee: _id,
+            checkIn: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (existing) {
+            return sendResponse(res, 400, null, "Attendance already recorded for today");
+        }
+
+        // Standard check-in time: 9:00 AM IST
+        const standardCheckIn = moment.tz(`${now.format("YYYY-MM-DD")} 09:00`, "Asia/Kolkata").toDate();
+
+        // Determine status
+        const status = checkInIST <= standardCheckIn ? "ONTIME" : "LATE";
+
+        // Save attendance
+        const newAttendance = await attendanceModel.create({
+            employee: _id,
+            checkIn: checkInIST,
+            status,
+            location
+        });
+
+        return sendResponse(res, 200, newAttendance, "Attendance marked successfully");
+
+   
+};
+
+export const checkOutAttendance = async (req, res, next) => {
+        const { _id } = req.user;
+        const { checkOut, location,} = req.body;
+
+        // Get current date in IST
+        const now = moment().tz("Asia/Kolkata");
+
+        // Parse checkout time in IST
+        const checkOutIST = moment.tz(`${now.format("YYYY-MM-DD")} ${checkOut}`, "Asia/Kolkata").toDate();
+
+        const startOfDay = moment.tz(now.format("YYYY-MM-DD"), "Asia/Kolkata").startOf("day").toDate();
+        const endOfDay = moment.tz(now.format("YYYY-MM-DD"), "Asia/Kolkata").endOf("day").toDate();
+
+        // Find today's attendance for the employee
+        const attendance = await attendanceModel.findOne({
+            employee: _id,
+            // employee: employee,
+            checkIn: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        if (!attendance) {
+            return sendResponse(res, 404, null, "No check-in found for today");
+        }
+
+        // Calculate working hours
+        const checkInMoment = moment(attendance.checkIn);
+        const checkOutMoment = moment(checkOutIST);
+        const duration = moment.duration(checkOutMoment.diff(checkInMoment));
+        const hours = Math.floor(duration.asHours());
+        const minutes = duration.minutes();
+        const workingHours = `${hours}h ${minutes}m`;
+
+        // Optional: update status to HALFDAY if worked less than 4 hours
+        let status = attendance.status;
+        if (hours < 4) {
+            status = "HALFDAY";
+        }
+
+        // Update attendance record
+        attendance.checkOut = checkOutIST;
+        attendance.workingHours = workingHours;
+        attendance.status = status;
+        if (location) {
+            attendance.location = location; // optionally update if needed
+        }
+        await attendance.save();
+
+        return sendResponse(res, 200, attendance);
+
+   
+};
+
+
+export const getTodaysAttendanceForEmployee = async (req, res, next) => {
+
+        const {_id} = req.user
+        const now = moment().tz("Asia/Kolkata");
+
+        const startOfDay = moment.tz(now.format("YYYY-MM-DD"), "Asia/Kolkata").startOf('day').toDate();
+        const endOfDay = moment.tz(now.format("YYYY-MM-DD"), "Asia/Kolkata").endOf('day').toDate();
+
+        // const attendanceRecords = await attendanceModel.find({
+        //     checkIn: { $gte: startOfDay, $lte: endOfDay }
+        // }).populate("employee"); // optional: populate employee details
+
+        const attendanceRecords = await attendanceModel.find({
+            // employee: id,
+            employee: _id,
+            checkIn: { $gte: startOfDay, $lte: endOfDay }
+        });
+
+        return sendResponse(res, 200, attendanceRecords);
+
+};
+
+
+
+export const getPaginatedAttendance = async (req, res, next) => {
+    // try {
+        const { _id } = req.user; // Logged-in user
+        // const { id } = req.params; // Logged-in user
+        const { limit = 20 } = req.query; // Default limit is 20
+
+        const attendanceRecords = await attendanceModel
+            .find({ employee: _id })
+            // .find({ employee: id })
+            .sort({ createdAt: -1 }) // Most recent first
+            .limit(parseInt(limit))
+            .lean();
+
+        return sendResponse(res, 200, attendanceRecords);
+    // } catch (error) {
+    //     return sendResponse(res, 500, null, "Failed to fetch attendance records");
+    // }
+};
+
 
 
 // export const getAllAttendance = async (req, res, next) => {
@@ -268,6 +407,8 @@ export const updateAttendance = async (req, res, next) => {
 
     sendResponse(res, 200, updatedAttendance);
 };
+
+
 
 
 
@@ -1154,5 +1295,40 @@ export const calculateMonthlyAttendance = async (req, res) => {
     } catch (error) {
         console.error("Error fetching employee worked days:", error);
         res.status(500).json({ success: false, message: "Internal Server Error" });
+    }
+};
+
+
+
+export const getMonthlyAttendanceForEmployee = async (req, res, next) => {
+    try {
+        const { _id } = req.user; // logged-in employee
+        const { month, year } = req.query;
+
+        // Use provided month/year or default to current
+        const targetMonth = month ? parseInt(month) - 1 : moment().month(); // 0-indexed
+        const targetYear = year ? parseInt(year) : moment().year();
+
+        // Get start and end of the month in IST
+        const startOfMonth = moment.tz({ year: targetYear, month: targetMonth, day: 1 }, "Asia/Kolkata")
+            .startOf("month")
+            .toDate();
+
+        const endOfMonth = moment.tz({ year: targetYear, month: targetMonth, day: 1 }, "Asia/Kolkata")
+            .endOf("month")
+            .toDate();
+
+        // Fetch attendances based on createdAt timestamp
+        const records = await attendanceModel.find({
+            employee: _id,
+            createdAt: {
+                $gte: startOfMonth,
+                $lte: endOfMonth,
+            },
+        }).sort({ createdAt: -1 });
+
+        return sendResponse(res, 200, records, "Monthly attendance fetched successfully");
+    } catch (error) {
+        return sendResponse(res, 500, null, "Failed to fetch monthly attendance");
     }
 };
