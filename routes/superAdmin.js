@@ -4,6 +4,8 @@ import { createBranch, deleteBranch, getAllBranches, getBranchById, updateBranch
 import { createDesignation, deleteDesignation, getAllDesignations, getDesignationById, updateDesignation } from "../controller/designation/designation.js";
 import { createTax, deleteTax, getAllTaxes, getTaxById, updateTax } from "../controller/payrolls/taxType.js";
 import { primaryValidater } from "../middleware/auth.js";
+import { createBank, deleteBank, getAllBanks, getBankById, updateBank } from "../controller/bank/bankController.js";
+import { createLoanType, deleteLoanType, getAllLoanTypes, getLoanTypeById, updateLoanType } from "../controller/loanType/loanTypeontroller.js";
 const router = express.Router();
 
 
@@ -35,6 +37,25 @@ router.get("/get-all-tax",primaryValidater,tryCatchMiddleware(getAllTaxes))
 router.get("/get-tax/:id",tryCatchMiddleware(getTaxById))
 router.put("/update-tax/:id",tryCatchMiddleware(updateTax))
 router.delete("/delete-tax/:id",tryCatchMiddleware(deleteTax))
+
+//bank
+
+router.post("/create-bank",tryCatchMiddleware(createBank))   //✅ 
+router.get("/get-all-banks",tryCatchMiddleware(getAllBanks))   //✅ 
+router.get("/get-a-bank/:id",tryCatchMiddleware(getBankById))   //✅ 
+router.put("/update-a-bank/:id",tryCatchMiddleware(updateBank))   //✅ 
+router.delete("/delete-bank/:id",tryCatchMiddleware(deleteBank))   //✅ 
+
+
+
+// loanType
+
+router.post("/add-loan-type",tryCatchMiddleware(createLoanType))      //✅ 
+router.get("/get-all-loan-type",tryCatchMiddleware(getAllLoanTypes))   //✅ 
+router.get("/get-a-loan-type/:id",tryCatchMiddleware(getLoanTypeById))  //✅ 
+router.put("/update-loan-type/:id",tryCatchMiddleware(updateLoanType))   //✅ 
+router.delete("/delete-loan-type/:id",tryCatchMiddleware(deleteLoanType)) //✅ 
+
 
 
 

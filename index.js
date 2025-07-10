@@ -14,7 +14,10 @@ import cookieParser from "cookie-parser";
 
 import hr from "./routes/hr.js"
 import superAdmin from "./routes/superAdmin.js"
-import teleCaller from "./routes/TeleCaller.js"
+import dataEntry from "./routes/dataEntry.js"
+import admin from "./routes/admin.js"
+import teleCaller from "./routes/teleCaller.js"
+import creditManager from "./routes/creditManager.js"
 import { markAbsent } from "./utils/cronJob.js";
 
 
@@ -41,7 +44,12 @@ app.use(bodyParser.urlencoded({ limit: '10000mb' }));
 
 app.use("/api/hr", hr)
 app.use('/api/super-admin',superAdmin)
-app.use('/api/tele-caller',teleCaller)
+app.use('/api/tele-caller',dataEntry)
+app.use("/api/admin",admin)
+app.use("/api/lead-handler",teleCaller)
+app.use("/api/credit-manager",creditManager)
+
+
  
 
 

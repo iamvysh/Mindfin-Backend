@@ -31,6 +31,14 @@ export const addEmployee = async (req,res,next) =>{
         // return res.status(400).json({ message: "Employee with this email already exists." });
     }
 
+    const isExistingProfessionalEmail =  await employeeModel.findOne({ professionalEmail });
+
+    if (isExistingProfessionalEmail) {
+        return next (new CustomError("Employee with this professional email already exists.",400))
+        // return res.status(400).json({ message: "Employee with this email already exists." });
+    }
+
+
     // Create a new employee instance
     const newEmployee = new employeeModel({
         firstName,
@@ -126,7 +134,8 @@ export const addEmployee = async (req,res,next) =>{
         to: email,
         headers: `From: ${process.env.NODEMAILER_EMAIL}`,
         subject: "Account Authorization",
-        html: welcomeEmployee(firstName,professionalEmail),
+        // html: welcomeEmployee(firstName,professionalEmail),
+        html: welcomeEmployee(firstName,email),
     });
 
 

@@ -1,6 +1,7 @@
 import CustomError from '../../utils/customError.js';
 import sendResponse from '../../utils/sendResponse.js';
 import Leads from "../../model/leadsModel.js"
+import loanTypeModel from '../../model/loanTypeModel.js';
 
 
 
@@ -83,70 +84,165 @@ import Leads from "../../model/leadsModel.js"
    
 // }
 
-export const bulkUploadLeads = async (req, res, next) => {
+// export const bulkUploadLeads = async (req, res, next) => {
 
-        const { type, branch, _id } = req.user;
-        const leadsData = req.body;
+//         const { type, branch, _id } = req.user;
+//         const leadsData = req.body;
 
-        if (!Array.isArray(leadsData)) {
-            return next(new CustomError('Request body must be an array of leads'));
-        }
+//         if (!Array.isArray(leadsData)) {
+//             return next(new CustomError('Request body must be an array of leads'));
+//         }
 
-        // Extract all emails and phones from request
-        const emails = leadsData.map(lead => lead.email).filter(Boolean);
-        const phones = leadsData.map(lead => lead.phone).filter(Boolean);
+//         // Extract all emails and phones from request
+//         const emails = leadsData.map(lead => lead.email).filter(Boolean);
+//         const phones = leadsData.map(lead => lead.phone).filter(Boolean);
 
-        console.log(emails,"emails");
-        console.log(phones,"phones");
+//         console.log(emails,"emails");
+//         console.log(phones,"phones");
         
 
-        // Find duplicates already in DB
-        const existingLeads = await Leads.find({
-            $or: [
-                { email: { $in: emails } },
-                { phone: { $in: phones } }
-            ]
-        });
+//         // Find duplicates already in DB
+//         const existingLeads = await Leads.find({
+//             $or: [
+//                 { email: { $in: emails } },
+//                 { phone: { $in: phones } }
+//             ]
+//         });
 
-        const existingEmails = new Set(existingLeads.map(lead => lead.email));
-        const existingPhones = new Set(existingLeads.map(lead => lead.phone));
+//         const existingEmails = new Set(existingLeads.map(lead => lead.email));
+//         const existingPhones = new Set(existingLeads.map(lead => lead.phone));
 
-        console.log(existingEmails,"x-email");
-        console.log(existingPhones,"x-phone");
+//         console.log(existingEmails,"x-email");
+//         console.log(existingPhones,"x-phone");
         
 
 
-        const uniqueLeads = [];
-        const duplicateLeads = [];
+//         const uniqueLeads = [];
+//         const duplicateLeads = [];
 
-        leadsData.forEach(lead => {
-            if (existingEmails.has(lead.email) || existingPhones.has(lead.phone)) {
-                duplicateLeads.push(lead);
-            } else {
-                uniqueLeads.push({
-                    ...lead,
-                    branch: branch,
-                    createdBy: _id
-                });
-            }
-        });
+//         leadsData.forEach(lead => {
+//             if (existingEmails.has(lead.email) || existingPhones.has(lead.phone)) {
+//                 duplicateLeads.push(lead);
+//             } else {
+//                 uniqueLeads.push({
+//                     ...lead,
+//                     branch: branch,
+//                     createdBy: _id
+//                 });
+//             }
+//         });
 
 
-        console.log(uniqueLeads,"uleads");
-        console.log(duplicateLeads,"duleads");
+//         console.log(uniqueLeads,"uleads");
+//         console.log(duplicateLeads,"duleads");
         
 
-        // Insert only unique leads
-        const insertedLeads = uniqueLeads.length > 0 ? await Leads.insertMany(uniqueLeads) : [];
+//         // Insert only unique leads
+//         const insertedLeads = uniqueLeads.length > 0 ? await Leads.insertMany(uniqueLeads) : [];
 
-        sendResponse(res, 200, {
-            insertedLeads,
-            duplicateLeads,
-            hasDuplicates: duplicateLeads.length > 0
-        });
+//         sendResponse(res, 200, {
+//             insertedLeads,
+//             duplicateLeads,
+//             hasDuplicates: duplicateLeads.length > 0
+//         });
 
    
+// };
+
+
+
+export const bulkUploadLeads = async (req, res, next) => {
+  try {
+    const { type, branch, _id } = req.user;
+    const leadsData = req.body;
+
+    if (!Array.isArray(leadsData)) {
+      return next(new CustomError('Request body must be an array of leads'));
+    }
+
+    // 1. Extract all emails, phones, and loanTypes from leads
+    const emails = leadsData.map(lead => lead.email).filter(Boolean);
+    const phones = leadsData.map(lead => lead.phone).filter(Boolean);
+    const loanTypeNames = [
+      ...new Set(leadsData.map(lead => lead.loanType).filter(Boolean))
+    ];
+
+    // 2. Get all matching loanTypes from DB
+    const loanTypes = await loanTypeModel.find({
+      loanName: { $in: loanTypeNames },
+      isDeleted: false,
+    });
+
+    // 3. Create loanTypeMap { "Home Loan": ObjectId("...") }
+    const loanTypeMap = {};
+    loanTypes.forEach(type => {
+      loanTypeMap[type.loanName.toLowerCase()] = type._id;
+    });
+
+    // 4. Check for missing loan types
+    const missingLoanTypes = loanTypeNames.filter(
+      name => !loanTypeMap[name.toLowerCase()]
+    );
+    if (missingLoanTypes.length > 0) {
+      return next(
+        new CustomError(
+          `Missing loan types in DB: ${missingLoanTypes.join(", ")}`,
+          400
+        )
+      );
+    }
+
+    // 5. Find existing leads by email/phone
+    const existingLeads = await Leads.find({
+      $or: [{ email: { $in: emails } }, { phone: { $in: phones } }],
+    });
+
+    const existingEmails = new Set(existingLeads.map(lead => lead.email));
+    const existingPhones = new Set(existingLeads.map(lead => lead.phone));
+
+    const uniqueLeads = [];
+    const duplicateLeads = [];
+
+    leadsData.forEach(lead => {
+      const isDuplicate =
+        existingEmails.has(lead.email) || existingPhones.has(lead.phone);
+
+      const mappedLoanType = loanTypeMap[lead.loanType?.toLowerCase()];
+
+      if (!mappedLoanType) {
+        duplicateLeads.push({ ...lead, reason: "Invalid loan type" });
+        return;
+      }
+
+      const formattedLead = {
+        ...lead,
+        loanType: mappedLoanType,
+        branch: branch,
+        createdBy: _id,
+      };
+
+      if (isDuplicate) {
+        duplicateLeads.push(lead);
+      } else {
+        uniqueLeads.push(formattedLead);
+      }
+    });
+
+    // Insert only unique leads
+    const insertedLeads =
+      uniqueLeads.length > 0 ? await Leads.insertMany(uniqueLeads) : [];
+
+    return sendResponse(res, 200, {
+      insertedLeads,
+      duplicateLeads,
+      hasDuplicates: duplicateLeads.length > 0,
+    });
+  } catch (error) {
+    next(error);
+  }
 };
+
+
 
 export const getAllLeads = async (req, res, next) => {
     const { type, branch, _id } = req.user;
@@ -194,6 +290,7 @@ export const getAllLeads = async (req, res, next) => {
     try {
         const totalLeads = await Leads.countDocuments(query);
         const leads = await Leads.find(query)
+            .populate("loanType")
             .skip(skip)
             .limit(limit)
             .sort({ LeadCreatedDate: -1 });
@@ -221,6 +318,7 @@ export const getALeadByID = async (req,res,next) => {
     const {id} = req.params
 
     const lead = await Leads.findById(id)
+    .populate("loanType")
     
     if(!lead){
         return next(new CustomError('Lead not found'))
@@ -324,7 +422,7 @@ export const exportLeads = async (req, res, next) => {
         }
     }
 
-        const leads = await Leads.find(query).sort({ LeadCreatedDate: -1 });
+        const leads = await Leads.find(query).populate("loanType").sort({ LeadCreatedDate: -1 });
 
         if (!leads ) {
             return next(new CustomError('Leads not found'));

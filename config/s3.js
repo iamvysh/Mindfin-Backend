@@ -185,6 +185,38 @@ async function uploadFile(req, rootFolder) {
   return data;
 }
 
+
+async function uploadFileForTeleCallerLeads(req, rootFolder) {
+  const data = [];
+
+  const images = Array.isArray(req.files.image)
+    ? req.files.image
+    : [req.files.image]; // ensure always array
+
+  for (const file of images) {
+    const originalName = file.name;
+    const extension = originalName.split(".").pop();
+    const uniqueName = `${rootFolder}/${Math.round(
+      Math.random() * 1000
+    )}${Date.now()}${Math.round(Math.random() * 10000)}.${extension}`;
+
+    const uploadCommand = new PutObjectCommand({
+      Bucket: process.env.BUCKET_NAME_2,
+      Key: uniqueName,
+      Body: file.data,
+      ContentType: file.mimetype,
+    });
+
+    await s3.send(uploadCommand);
+
+    const url = `https://${process.env.BUCKET_NAME_2}.s3.ap-south-1.amazonaws.com/${uniqueName}`;
+
+    data.push({ name: originalName, url });
+  }
+
+  return data;
+}
+
 // Function to generate a presigned URL for uploading
 const putPreSignedUrl = async (req, res, next) => {
   try {
@@ -264,4 +296,4 @@ export const getPreSignedUrl = async (key) => {
 };
 
 // Export functions
-export { putPreSignedUrl, uploadFile, putPreSignedUrlPublic };
+export { putPreSignedUrl, uploadFile, putPreSignedUrlPublic , uploadFileForTeleCallerLeads};

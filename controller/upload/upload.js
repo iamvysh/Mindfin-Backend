@@ -1,5 +1,5 @@
 import axios from "axios";
-import { uploadFile } from "../../config/s3.js";
+import { uploadFile, uploadFileForTeleCallerLeads } from "../../config/s3.js";
 import sendResponse from "../../utils/sendResponse.js";
 
 export const upload = async (req, res, next) => {
@@ -8,6 +8,16 @@ export const upload = async (req, res, next) => {
 
         return sendResponse(res, 200, data);
     
+};
+
+
+export const uploadTelecallerLeads = async (req, res, next) => {
+
+    const folderName = req.body.folderName;
+    const files = await uploadFileForTeleCallerLeads(req, folderName);
+
+    return sendResponse(res, 200,files);
+ 
 };
 
 
