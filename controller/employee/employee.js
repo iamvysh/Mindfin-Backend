@@ -23,7 +23,7 @@ export const addEmployee = async (req,res,next) =>{
 
     const { email, phone, firstName, lastName, designation, employeeId ,professionalEmail} = req.body;
 
-    // Check if the email already exists
+    // Check if the email already existszzz
     const existingEmployee = await employeeModel.findOne({ email });
 
     if (existingEmployee) {
