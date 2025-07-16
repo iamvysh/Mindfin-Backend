@@ -1,10 +1,7 @@
-// import { loadEnv } from "../../config/envConfig.js";
 import employeeModel from "../../model/employeeModel.js";
 import CustomError from "../../utils/customError.js";
-import { loadEnv } from "../../config/envConfig.js";
 import sendResponse from "../../utils/sendResponse.js";
 import transport from "../../config/nodemailer.js";
-// import otpModel from "../../models/otpModel.js";
 import otpModel from "../../model/otpModel.js";
 import otpGenerator from "otp-generator";
 import { comparePassword, hashPassword } from "../../utils/hashPass.js";
@@ -14,9 +11,6 @@ import attendenceModel from "../../model/attendenceModel.js";
 import leavesModel from "../../model/leavesModel.js";
 import JwtService from "../../utils/jwtService.js";
 import { Otp, welcomeEmployee } from "../../utils/emailTemplate.js";
-
-loadEnv()
-
 
 
 export const addEmployee = async (req,res,next) =>{
@@ -130,9 +124,9 @@ export const addEmployee = async (req,res,next) =>{
 `;
 
     await transport.sendMail({
-        from: process.env.NODEMAILER_EMAIL,
+        from: process.env.SMTP_MAIL,
         to: email,
-        headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+        headers: `From: ${process.env.SMTP_MAIL}`,
         subject: "Account Authorization",
         // html: welcomeEmployee(firstName,professionalEmail),
         html: welcomeEmployee(firstName,email),
@@ -234,9 +228,9 @@ export const generatePassword = async (req,res,next) =>{
    
 
     await transport.sendMail({
-        from: process.env.NODEMAILER_EMAIL,
+        from: process.env.SMTP_MAIL,
         to: email,
-        headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+        headers: `From: ${process.env.SMTP_MAIL}`,
         subject: "Account Authorization",
         html: Otp({name,otpDigits}),
     });
@@ -353,9 +347,9 @@ export const forgotPassword = async(req,res,next) =>{
  
 
     await transport.sendMail({
-        from: process.env.NODEMAILER_EMAIL,
+        from: process.env.SMTP_MAIL,
         to: email,
-        headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+        headers: `From: ${process.env.SMTP_MAIL}`,
         subject: "Account Authorization",
         html: Otp({name,otpDigits}),
         
@@ -407,9 +401,9 @@ export const reSendOtpForgotPassword = async(req,res,next)=>{
 
         // Send email
         await transport.sendMail({
-            from: process.env.NODEMAILER_EMAIL,
+            from: process.env.SMTP_MAIL,
             to: email,
-            headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+            headers: `From: ${process.env.SMTP_MAIL}`,
             subject: "Account Authorization",
             html: Otp({name,otpDigits}),
             
@@ -464,9 +458,9 @@ export const reSendOtpGeneratePassword = async(req,res,next)=>{
 
         // Send email
         await transport.sendMail({
-            from: process.env.NODEMAILER_EMAIL,
+            from: process.env.SMTP_MAIL,
             to: email,
-            headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+            headers: `From: ${process.env.SMTP_MAIL}`,
             subject: "Account Authorization",
             html: Otp({name,otpDigits}),
             
@@ -758,9 +752,9 @@ export const updateBioEmployee=async(req,res,next)=>{
  `;
      // Send email
      await transport.sendMail({
-        from: process.env.NODEMAILER_EMAIL,
+        from: process.env.SMTP_MAIL,
         to: existngAdmin?.email,
-        headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+        headers: `From: ${process.env.SMTP_MAIL}`,
         subject: "OTP verification",
         html: htmlContent,
     });

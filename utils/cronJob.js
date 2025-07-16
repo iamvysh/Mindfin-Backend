@@ -1,5 +1,4 @@
 import cron from "node-cron";
-import mongoose from "mongoose";
 import moment from "moment-timezone";
 import employeeModel from "../model/employeeModel.js";
 import attendenceModel from "../model/attendenceModel.js";

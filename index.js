@@ -1,65 +1,44 @@
-import express from "express";
-import connectDB from "./config/db.js";
-import dotenv from "dotenv";
-import cors from 'cors'
-import morgan from 'morgan';
-import http from "http"
-import bodyParser from "body-parser";
-import fileUpload from "express-fileupload";
-import middleError from "./middleware/error.js";
-import cookieParser from "cookie-parser";
-
-
-
-
-import hr from "./routes/hr.js"
-import superAdmin from "./routes/superAdmin.js"
-import dataEntry from "./routes/dataEntry.js"
-import admin from "./routes/admin.js"
-import teleCaller from "./routes/teleCaller.js"
-import creditManager from "./routes/creditManager.js"
+import dotenv from 'dotenv-flow';
+dotenv.config();
+import { createServer } from "http";
+import mongoose from 'mongoose';
+import { app, initializeDB } from "./app.js";
 import { markAbsent } from "./utils/cronJob.js";
 
-
-const envFilePath = `.env.${process.env.NODE_ENV}`;
-dotenv.config({ path: envFilePath });
-
-const PORT = process.env.PORT || 5050
-const app = express();
-
-app.use(cors())
-connectDB();
-app.use(morgan("dev"))
-app.use(fileUpload())
+const PORT = process.env.PORT || 5050;
+const NODE_ENV = process.env.NODE_ENV;
 
 
-app.use(bodyParser.json({
-    limit: "100mb"
-  }))
-  
- app.use(cookieParser()) 
-app.use(bodyParser.urlencoded({ limit: '10000mb' }));
+const startServer = async () => {
+  try {
+    await initializeDB();
+    markAbsent();
+    const server = createServer(app);
+    server.listen(PORT, () => {
+      if (NODE_ENV !== 'production') {
+        console.log(`✅ Server listening at http://localhost:${PORT}`);
+      } else {
+        console.log('✅ Server is running in production mode.');
+      }
+    });
 
+    // Graceful shutdown
+    const shutdown = () => {
+      console.log('Shutting down server...');
+      server.close(() => {
+        mongoose.connection.close(false, () => {
+          console.log('MongoDB connection closed.');
+          process.exit(0);
+        });
+      });
+    };
 
+    process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
 
-app.use("/api/hr", hr)
-app.use('/api/super-admin',superAdmin)
-app.use('/api/tele-caller',dataEntry)
-app.use("/api/admin",admin)
-app.use("/api/lead-handler",teleCaller)
-app.use("/api/credit-manager",creditManager)
-
-
- 
-
-
-
-app.use(middleError);
-
-markAbsent()
-
-
-app.listen(PORT, () => {
-    console.log(`running port ${PORT}`)
-  
-  })
+  } catch (err) {
+    console.error(`❌ Server startup failed: ${err.message}`);
+    process.exit(1);
+  }
+};
+startServer();

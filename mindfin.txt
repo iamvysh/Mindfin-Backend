@@ -1,0 +1,257 @@
+Scope of work
+
+SeekNeo IT Solutions agrees to provide services as outlined in Exhibit A. This includes:
+●	Comprehensive web application development for loan agency management.
+●	Key modules such as Lead Management, Telecalling, Sales, Credit Management, Branch Management, Employee Management, Reporting & Analytics, and Company Loan Eligibility.
+●	Integration with credit scoring APIs, document validation systems, and cloud services (AWS or Digital Ocean).
+●	Testing, deployment, and 6 months of post-launch bug-fixing support.
+
+
+
+Comprehensive Web Application for Loan Agency Management
+Overview:
+
+
+This project involves developing a robust, scalable web application specifically designed for small to medium-sized loan agencies. The platform will streamline the entire loan processing lifecycle, from lead generation and client interaction to credit evaluation and loan disbursement. By integrating modules for role-based dashboards, analytics, and automation, the application aims to optimize operational efficiency, improve communication, and enhance transparency for all stakeholders.
+The platform will cater to various user roles such as Super Admins, Branch Managers, Telecallers, Sales Teams, Credit Managers, and HR, providing each role with tailored features to meet their specific requirements. This system addresses challenges like fragmented communication, inefficient workflows, and manual data handling by offering a centralized, role-based solution.
+
+
+Key Features:
+1.	Lead Management: Import and manage leads from multiple sources like social media, email campaigns, and marketing data providers, with automatic assignment and duplicate detection.
+ 
+2.	Telecalling Dashboard: Telecallers can update lead statuses, schedule follow-ups, and request documents using integrated email APIs.
+3.	Sales Automation: Track document collection, ensure completeness, and coordinate with credit managers for seamless loan processing.
+4.	Credit Evaluation: integration of APIs like uploading the bank statement and analyzing the eligibility.
+5.	Branch Management: Branch managers can oversee operations, monitor performance metrics, and generate branch-specific reports.
+6.	HR and Employee Management: Automate employee onboarding, attendance tracking, payroll, and leave management.
+7.	Analytics and Reporting: Generate custom reports for loan disbursement, team performance, and predictive trends.
+8.	Role-Based Security: Implement robust access control, ensuring each user accesses only the data relevant to their role.
+9.	Company Loan Eligibility Module (Newly Added)
+
+
+
+Goals and Objectives:
+●	Efficiency: Reduce manual effort in managing leads, documents, and approvals by automating workflows.
+●	Scalability: Provide a system that can grow with the business, accommodating new branches, employees, and bank partnerships.
+●	Transparency: Offer real-time insights through dashboards and reports for better decision-making.
+●	Compliance: Ensure adherence to financial regulations by maintaining audit logs and data accuracy.
+●	User-Centric Design: Provide a seamless, intuitive experience tailored for each role in the agency.
+
+
+
+Stakeholders:
+1.	Loan Agencies: Primary users who will utilize the system for their daily operations.
+2.	Branch Managers: Responsible for team oversight and performance metrics.
+3.	Super Admins: Manage the overall platform, users, and system configurations.
+4.	HR Teams: Use the system for employee management and recruitment.
+ 
+5.	Clients: Indirect beneficiaries through faster and more transparent loan processes.
+
+
+
+Use Case Example:
+A new lead is uploaded by the digital marketing team into the system. The lead is assigned to a telecaller, who contacts the client to determine interest. If the client is interested, the telecaller updates the status and requests required documents. The sales team collects and uploads these documents, which are then verified by the credit manager using integrated credit scoring APIs. If eligible, the credit manager negotiates terms with partner banks and communicates the finalized loan details to the client. Once agreed, the loan is processed and disbursed, with the status updated in the system for tracking and reporting.
+
+
+Benefits:
+●	Streamlines loan processing, reducing delays and errors.
+●	Enhances communication and collaboration among teams.
+●	Provides real-time insights for better management decisions.
+●	Ensures regulatory compliance through audit trails and secure data handling.
+●	Scales with business needs, supporting new branches and users effortlessly.
+This project will empower loan agencies to handle their operations efficiently, improve customer satisfaction, and achieve sustainable growth. Let me know if you’d like further elaboration!
+
+
+Main modules
+
+
+1.	Lead Management Module
+
+
+This module focuses on managing potential clients' data, which comes from multiple sources such as social media, email campaigns, and data providers. Once the leads are imported, the system assigns them to telecallers either automatically based on predefined criteria or manually by an admin. Users can filter and sort leads by various parameters like
+ 
+status (e.g., pending, rejected, interested) or source. Duplicate lead entries are identified and automatically moved to a separate section for review, ensuring data integrity. Branch managers and admins can track the overall performance, including lead conversion rates, through dedicated dashboards.
+
+
+2.	Telecalling Module
+
+
+The telecalling module empowers telecallers to efficiently manage their daily tasks. Assigned leads appear in their personalized dashboard with all necessary details such as contact information and loan preferences. Telecallers can update the status of each lead as “Interested,” “Not Interested,” “Document Pending,” or “RNR” (Ring No Reply), adding relevant remarks to aid further processing. To streamline communication, the system integrates an email API that allows telecallers to request missing documents from clients. Telecallers' daily performance is tracked, with their progress visible to team leaders and branch managers.
+
+
+3.	Sales Module
+
+Once a lead is marked as “Interested” by telecallers, it transitions to the sales team. This module enables sales representatives to collect necessary documents from the client and upload them securely into the system. A document tracker ensures all required files are submitted, highlighting missing items for follow-up. Sales personnel also coordinate with credit managers for additional requirements, ensuring a smooth handover. The module generates daily performance reports, allowing team leaders and managers to assess progress and productivity effectively.
+
+
+
+
+4.	Credit Management Module
+
+
+The credit management module handles loan eligibility assessments and document verification. Credit managers use integrated tools like CIBIL or other credit score APIs to
+ 
+evaluate the client's financial credibility. They can update the lead's status as “Eligible” or “Rejected” based on risk analysis. For eligible cases, this module facilitates communication with multiple banks, helping managers negotiate favorable terms like interest rates and EMIs. The system tracks these discussions and provides a detailed summary to clients for final agreement. Approved loans are processed further, and all decisions are recorded for compliance purposes.
+
+
+5.	Branch Management Module
+
+This module is tailored for branch managers to oversee and optimize operations at their respective branches. It offers dashboards that display critical performance indicators such as lead status, telecaller productivity, and sales team performance. Branch managers can assign tasks to employees, set targets, and ensure adherence to deadlines. The module also generates branch-specific reports and insights, enabling managers to identify areas for improvement and take corrective action. Automated alerts notify managers about critical updates, such as missed targets or client escalations.
+
+
+6.	Employee Management (HR Module)
+
+The HR module simplifies employee lifecycle management, starting from recruitment to resignation. HR can add new employees to the system, assign them roles, and allocate them to specific branches. Employee profiles include essential details such as contact information, salary structure, and emergency contacts. Attendance and leave tracking are automated, with notifications for early logins or logouts. HR can also post internal job openings, enabling employees to refer candidates. Payroll processing is streamlined with salary slips, bonus calculations, and compliance documentation.
+
+
+7.	Reporting and Analytics Module
+
+This module delivers actionable insights through real-time dashboards and customizable reports. Users can generate reports based on parameters like branch performance, sales targets, or loan approval rates. Predictive analytics tools analyze historical data to identify
+ 
+trends and project future outcomes, such as expected loan disbursals. Exporting reports in multiple formats (PDF, Excel) facilitates sharing with stakeholders. Role-specific dashboards ensure users see only the data relevant to their responsibilities, maintaining clarity and security.
+
+
+8.	Integration and Security
+
+The application integrates seamlessly with third-party services such as CRM platforms, credit score APIs, and banking systems for loan processing. Data security is a top priority, achieved through role-based access control, ensuring users access only what’s necessary for their roles. Audit logs track all user activities for compliance purposes. Regular automated backups ensure that critical data is never lost, and recovery options enable quick restoration in case of unexpected failures. These features make the platform robust and trustworthy for sensitive financial operations.
+
+
+9.	Company Loan Eligibility Module (Newly Added)
+Details: This module facilitates the evaluation of a company's eligibility for loans based on uploaded financial documents. It automates the validation process, providing faster and more accurate eligibility assessments.
+Key Features:
+●	Upload functionality for:
+○	6-month bank statements
+○	Balance sheets
+○	GST return reports
+●	Loan eligibility status with detailed reasoning for approval or rejection.
+●	Ability to flag missing or incorrect documents and notify users for follow-up.
+●	Comprehensive report generation for financial assessment
+
+
+
+Proposed Workflow Example
+ 
+1.	Lead Upload: Data entry or digital marketing teams upload new leads from various sources, including CSV files or manual entry. Leads are automatically assigned to telecallers.
+2.	Telecalling: Telecallers qualify leads by understanding their loan requirements. Leads marked as “Interested” are passed to the sales team, while others are categorized as “Not Interested” or “Document Pending.”
+3.	Sales Coordination: The sales team collects and verifies the client’s documents, ensuring everything required for credit evaluation is in place.
+4.	Credit Assessment: Credit managers assess the loan eligibility using credit score tools. They communicate with sales for any missing documents or further clarifications.
+5.	Loan Negotiation: Eligible leads are shared with partner banks. Credit managers negotiate terms and conditions and share the finalized details with the client for agreement.
+6.	Loan Disbursement: Once agreed, the loan is processed, disbursed, and the status is updated in the system.
+7.	Company Loan Eligibility Module (Newly Added)
+
+
+1.	Lead Management Module
+User Stories:
+●	As a Digital Marketer, I want to upload lead data through CSV or manual input so that I can provide fresh leads for telecallers to contact.
+●	As a Telecaller, I want to view the leads assigned to me so that I can focus on contacting potential clients effectively.
+●	As a Branch Manager, I want to monitor the number of leads received and their status (e.g., pending, rejected, or interested) so that I can assess the effectiveness of lead generation efforts.
+●	As an Admin, I want to automatically detect duplicate leads and separate them for review so that I can ensure data accuracy.
+
+
+Details:
+This module enables lead acquisition from multiple sources like social media, email campaigns, and external providers. Leads are validated during upload to ensure proper formatting. The system assigned leads to telecallers based on rules such as geographic
+ 
+region, branch priority, or loan type. Duplicate detection mechanisms flag similar entries for review, which can either be deleted or updated.
+Acceptance Criteria:
+1.	Leads should be uploaded in bulk (CSV/XLS) or individually.
+2.	Duplicate leads should appear in a separate dashboard view.
+3.	Assigned leads should notify the respective telecallers instantly.
+
+
+2.	Telecalling Module User Stories:
+●	As a Telecaller, I want to see my daily list of assigned leads so that I can prioritize my work.
+●	As a Telecaller, I want to mark a lead's status as “Interested,” “Not Interested,” “Document Pending,” or “RNR” so that I can inform the sales or admin teams effectively.
+●	As a Telecaller, I want to schedule follow-ups with clients and receive reminders so that I don’t miss potential opportunities.
+●	As a Sales Representative, I want to see the telecaller’s remarks so that I can prepare for client meetings.
+Details:
+Telecallers use this module to contact leads, update their status, and log remarks about interactions. Leads flagged as “Interested” move to the sales team for further action, while “Not Interested” leads are archived. Telecallers can request documents via an email API integrated into the platform, streamlining communication with potential clients.
+Acceptance Criteria:
+1.	Telecallers can filter leads by status (e.g., high-priority, pending follow-up).
+2.	Document requests should trigger email notifications to clients and log the interaction in the system.
+3.	Follow-up schedules must integrate with notifications and dashboards.
+
+
+3.	Sales Module
+ 
+User Stories:
+●	As a Sales Representative, I want to upload required client documents into the system so that credit managers can verify them for eligibility.
+●	As a Sales Representative, I want to track the progress of my leads’ credit evaluations so that I can follow up if necessary.
+●	As a Credit Manager, I want to flag missing or incorrect documents and notify sales representatives so that errors are corrected promptly.
+●	As a Branch Manager, I want to monitor my sales team’s daily activities so that I can address performance issues.
+Details:
+This module transitions interested leads from telecallers to the sales team. Sales representatives collect required documents (e.g., income proof, identity proof) and upload them. Incomplete submissions are flagged, and notifications are sent to the sales team to follow up with clients. Sales representatives can view the lead’s progress through the credit verification stage to maintain transparency.
+Acceptance Criteria:
+1.	Sales representatives can upload multiple documents for a single lead.
+2.	Notifications for missing documents should include a checklist for easy resolution.
+3.	Daily performance metrics should be accessible to branch managers.
+
+
+
+
+
+
+4.	Credit Management Module User Stories:
+●	As a Credit Manager, I want to assess the client’s credit score through an integrated API so that I can evaluate their loan eligibility accurately.
+●	As a Credit Manager, I want to view all uploaded client documents so that I can validate their completeness and accuracy.
+●	As a Credit Manager, I want to share eligible leads with partner banks and compare their terms so that I can offer the best options to the client.
+ 
+●	As a Sales Representative, I want to receive updates from the credit manager about additional document requirements so that I can follow up with the client.
+
+
+Details:
+Credit managers verify the client’s eligibility using credit score APIs like CIBIL. They evaluate submitted documents, calculate risk factors, and communicate with banks to find the best loan options. Loan terms, EMIs, and interest rates are negotiated and shared with the client for approval. Ineligible leads are flagged and archived with detailed reasons for rejection.
+Acceptance Criteria:
+1.	Credit score API integration should provide real-time results.
+2.	Approved loans should trigger notifications for the sales team and branch manager.
+3.	Rejected loans should include comments for tracking.
+
+
+5.	Branch Management Module
+User Stories:
+●	As a Branch Manager, I want to view real-time dashboards showing my team’s performance so that I can identify bottlenecks and optimize operations.
+●	As a Branch Manager, I want to approve or modify lead assignments so that I can ensure equal workload distribution.
+●	As a Branch Manager, I want to receive alerts for missed targets or overdue tasks so that I can intervene promptly.
+●	As a Regional Manager, I want to compare branch performance metrics so that I can evaluate overall efficiency.
+Details:
+Branch managers oversee all operations within their assigned branch. They have access to dashboards that display telecaller productivity, sales performance, and loan disbursement statistics. Managers can approve lead assignments, reassign tasks, and generate
+branch-specific reports. Automated alerts notify them about critical issues like missed targets or overdue document submissions.
+ 
+Acceptance Criteria:
+1.	Dashboards should update metrics in real-time.
+2.	Managers must be able to download reports in PDF and Excel formats.
+3.	Alerts should be customizable based on priority thresholds.
+
+
+
+6.	Employee Management (HR Module)
+User Stories:
+●	As an HR Manager, I want to add new employees to the system with detailed profiles so that I can manage onboarding efficiently.
+●	As an HR Manager, I want to track attendance and leave data so that I can calculate payroll accurately.
+●	As an Employee, I want to view my salary slips and attendance records so that I can track my earnings and work history.
+●	As an HR Manager, I want to post job openings and notify employees so that I can encourage referrals.
+
+
+
+
+Details:
+The HR module handles employee profiles, attendance, payroll, and recruitment. It automates attendance tracking and integrates leave management, ensuring accurate payroll calculations. Employees can view their profiles, apply for leaves, and download salary slips. HR can post internal job openings and track referrals, streamlining recruitment.
+Acceptance Criteria:
+1.	Employee profiles must include fields for contact details, salary, and branch assignment.
+2.	Leave requests should notify HR and supervisors.
+3.	Payroll reports must account for bonuses, deductions, and LOP.
+ 
+ 
+
+7.	Reporting and Analytics Module
+User Stories:
+●	As a Super Admin, I want to generate custom reports for loan disbursements and team performance so that I can analyze operational efficiency.
+●	As a Branch Manager, I want to track telecaller conversion rates so that I can identify top performers.
+●	As an HR Manager, I want to analyze attendance trends so that I can address issues proactively.
+●	As a Regional Manager, I want to access predictive analytics to forecast upcoming demands so that I can allocate resources efficiently.
+
+
+Details:
+This module provides actionable insights through advanced reporting and analytics tools. Users can generate role-specific reports, track key performance indicators (KPIs), and identify trends using predictive analytics. Reports can be exported in multiple formats for presentations or audits.
+Acceptance Criteria:
+1.	Reports should allow filtering by branch, role, or lead status.
+2.	Reports must be exportable in PDF, Excel, and CSV formats.

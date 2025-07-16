@@ -1,2 +1,7 @@
+
+# Ignore node_modules directory
 node_modules/
-.env.development
+
+# Ignore .env files
+.env*
+

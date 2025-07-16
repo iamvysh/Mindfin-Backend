@@ -1,6 +1,4 @@
 import jwt from 'jsonwebtoken';
-import { loadEnv } from '../config/envConfig.js';
-loadEnv()
 
 
 class JwtService {

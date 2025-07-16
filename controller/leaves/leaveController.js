@@ -5,10 +5,6 @@ import leavesModel from "../../model/leavesModel.js";
 import CustomError from "../../utils/customError.js";
 import { leaveApprovel, leaveReject } from "../../utils/emailTemplate.js";
 import sendResponse from "../../utils/sendResponse.js";
-import { loadEnv } from "../../config/envConfig.js";
-
-
-loadEnv()
 
 
 
@@ -313,9 +309,9 @@ export const getLeaveById = async (req, res, next) => {
 //             const officer = await employeeModel.findById(_id).populate("designation")
 
 //             await transport.sendMail({
-//             from: process.env.NODEMAILER_EMAIL,
+//             from: process.env.SMTP_MAIL,
 //             to: employeeEmail,
-//             headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+//             headers: `From: ${process.env.SMTP_MAIL}`,
 //             subject: `Your Leave Request has been ${newStatus}`,
 //             html:
             
@@ -394,10 +390,10 @@ export const updateLeave = async (req, res, next) => {
       const employeeEmail = leave?.employee?.professionalEmail;
   
       await transport.sendMail({
-        from: process.env.NODEMAILER_EMAIL,
+        from: process.env.SMTP_MAIL,
         to: employeeEmail,
         subject: `Your Leave Request has been ${newStatus}`,
-        headers: `From: ${process.env.NODEMAILER_EMAIL}`,
+        headers: `From: ${process.env.SMTP_MAIL}`,
         html:
           newStatus === "APPROVED"
             ? leaveApprovel({

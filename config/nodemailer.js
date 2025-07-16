@@ -1,18 +1,15 @@
-import { createTransport } from "nodemailer"
-import { loadEnv } from "./envConfig.js"
-// import dotenv from "dotenv";
-// dotenv.config();
-loadEnv()
+import { createTransport } from "nodemailer";
+
 
 const transport = createTransport({
-    service: "gmail",
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
+    service: process.env.SMTP_SERVICE,
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: Number(process.env.SMTP_PORT) === 465,
     auth: {
-        user: process.env.NODEMAILER_EMAIL,
-        pass: process.env.APP_PASS
+        user: process.env.SMTP_MAIL,
+        pass: process.env.SMTP_PASSWORD
     }
-})
+});
 
-export default transport
+export default transport;

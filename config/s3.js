@@ -14,13 +14,9 @@ import CustomError from "../utils/customError.js";
 import sendResponse from "../utils/sendResponse.js";
 import { pipeline } from "stream"
 import { promisify } from "util"
-// import axios from "axios";
-import { loadEnv } from "./envConfig.js";
 const pipelineAsync = promisify(pipeline);
 
 // import { client } from "./redis.js";
-
-loadEnv()
 
 // Configure AWS credentials
 const accessKeyId = process.env.AWS_ACCESS_KEY_1;
