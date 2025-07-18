@@ -3,10 +3,6 @@ import { Schema, model } from "mongoose";
 const employee = new Schema({
     firstName: String,
     lastName: String,
-    // "2FA": {
-    //     type: Boolean,
-    //     default: true
-    // },
     phone: {
         type: Number
     },
@@ -17,191 +13,160 @@ const employee = new Schema({
     profileImg: {
         type: [String]
     },
-    DOB:{
-        type:Date
+    DOB: {
+        type: Date
     },
-    maritalStatus:{
-        type:String,
-        enum:["MARRIED","SINGLE"]
+    maritalStatus: {
+        type: String,
+        enum: ["MARRIED", "SINGLE"]
 
     },
-    gender:{
-        type:String,
-        enum:["MALE","FEMALE","OTHER"]
+    gender: {
+        type: String,
+        enum: ["MALE", "FEMALE", "OTHER"]
 
     },
-    nationality:{
-        type:String,
+    nationality: {
+        type: String,
     },
-    familyMember:{
-        type:String,
+    familyMember: {
+        type: String,
     },
-    emergencyNumber:{
-        type:String,
+    emergencyNumber: {
+        type: String,
     },
-    aadharNumber:{
-        type:String,
+    aadharNumber: {
+        type: String,
     },
-    bloodgroup:{
-        type:String,
+    bloodgroup: {
+        type: String,
     },
-    address:{
-        type:String,
+    address: {
+        type: String,
     },
-    state:{
-        type:String,
+    state: {
+        type: String,
     },
-    city:{
-        type:String,
+    city: {
+        type: String,
     },
-    zipCode:{
-        type:Number,
+    zipCode: {
+        type: Number,
     },
-    employeeId:{
-        type:String,
+    employeeId: {
+        type: String,
     },
-    userName:{
-        type:String,
+    userName: {
+        type: String,
     },
-    employeeType:{
-        type:String,
-        enum: ["PERMENENT","TEMPORARARY","INTERN","NOTICEPERIOD"],
+    employeeType: {
+        type: String,
+        enum: ["PERMENENT", "TEMPORARARY", "INTERN", "NOTICEPERIOD"],
 
     },
-    professionalEmail:{
-        type:String,
+    professionalEmail: {
+        type: String,
     },
-    // branch:{
-    //     type:[String],
-    // },
     branch: [
         {
-          type: Schema.Types.ObjectId,
-          ref: "branch" 
+            type: Schema.Types.ObjectId,
+            ref: "branch"
         }
-      ],
-    designation:{
+    ],
+    designation: {
         type: Schema.Types.ObjectId,
-        ref: "designation" 
+        ref: "designation"
     },
-    workingDays:{
-        type:String
+    workingDays: {
+        type: String
     },
-    workingHours:{
-        type:String
+    workingHours: {
+        type: String
     },
-    dateOfJoin:{
-        type:Date
+    dateOfJoin: {
+        type: Date
     },
-    dateOfLeave:{
-        type:Date
+    dateOfLeave: {
+        type: Date
     },
-    jobType:{
-        type:String,
-        enum:["REMOTE","WFH","HYBRID"]
+    jobType: {
+        type: String,
+        enum: ["REMOTE", "WFH", "HYBRID"]
     },
-    officeLocation:{
-        type:String
+    officeLocation: {
+        type: String
     },
-    salary:{
-        type:Number
+    salary: {
+        type: Number
     },
-    salaryStartDate:{
-        type:Date
+    salaryStartDate: {
+        type: Date
     },
-    salaryEndDate:{
-        type:Date
+    salaryEndDate: {
+        type: Date
     },
-    bankName:{
-      type:String
+    bankName: {
+        type: String
     },
-    bankBranchName:{
-      type:String
+    bankBranchName: {
+        type: String
     },
-    accountName:{
-      type:String
+    accountName: {
+        type: String
     },
-    accountNo:{
-      type:String
+    accountNo: {
+        type: String
     },
-    IFSC:{
-      type:String
+    IFSC: {
+        type: String
     },
-    SWIFT:{
-      type:String
+    SWIFT: {
+        type: String
     },
-    IBAN:{
-      type:String
+    IBAN: {
+        type: String
     },
-    attendenceLoacation:{
-        type:String
+    attendenceLoacation: {
+        type: String
     },
-    bioMetricIp:{
-        type:String
+    bioMetricIp: {
+        type: String
     },
-    appointmentLetter:{
+    appointmentLetter: {
         type: [String]
 
     },
-    salarySlip:{
+    salarySlip: {
         type: [String]
 
     },
-    relivingLetter:{
+    relivingLetter: {
         type: [String]
 
     },
-    experienceLetter:{
+    experienceLetter: {
         type: [String]
     },
-    aadharCard:{
+    aadharCard: {
         type: [String]
 
     },
-    panCard:{
+    panCard: {
         type: [String]
 
     },
     password: {
         type: String
     },
-
-    // type: {
-    //     type: String,
-    //     default: "ADMIN",
-    //     enum: ["SUPERADMIN", "ADMIN","SALES","MANAGER"]
-    // },
-    // status: {
-    //     type: String,
-    //     enum: ["PERMENENT","TEMPORARARY","INTERN","NOTICEPERIOD"],
-    // },
-    isDeleted:{
-        type:Boolean,
-        default:false
+    isDeleted: {
+        type: Boolean,
+        default: false
     },
-    // countryCode: {
-    //     type: String,
-    //     default: "+91"
-    // },
-    // resetPasswordToken: {
-    //     type: String
-    // },
-    // resetPasswordExpires: {
-    //     type: Date,
-    // },
-    // address: {
-    //     city: {
-    //         type: String,
-    //     },
-    //     state: {
-    //         type: String
-    //     },
-    //     country: {
-    //         type: String
-    //     }
-    // }
-    
-}, { timestamps: true })
+    isVerified: {
+        type: Boolean,
+        default: false
+    }
+}, { timestamps: true });
 
 
-    export default model("employee", employee);
+export default model("employee", employee);

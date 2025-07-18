@@ -54,9 +54,6 @@ if (process.env.NODE_ENV !== 'production') {
     app.use(morgan("dev"));
 }
 
-app.use("/", (req, res) => {
-    res.status(200).json({ success: true, message: 'Backend is running!' });
-});
 app.use("/api/hr", hrRoutes);
 app.use('/api/super-admin', superAdminRoutes);
 app.use('/api/tele-caller', dataEntryRoutes);
