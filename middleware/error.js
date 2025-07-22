@@ -1,7 +1,8 @@
-
+import { logErrorToDB } from '../utils/logErrorToDB.js';
 
 const errorHandler = (err, req, res, next) => {
 
+     // 1. Log to console 
     console.error(`[${new Date().toISOString()}] Error:`, {
         message: err.message,
         stack: process.env.NODE_ENV !== 'production' ? err.stack : undefined,
@@ -10,7 +11,10 @@ const errorHandler = (err, req, res, next) => {
         statusCode: err.statusCode || 500
     });
 
-    // CORS errors
+    // 2. Log to DB
+    logErrorToDB(err, req);
+
+    // 3. CORS error
     if (err.message.includes('CORS')) {
         return res.status(403).json({
             success: false,
@@ -18,6 +22,7 @@ const errorHandler = (err, req, res, next) => {
         });
     }
 
+    // 4. Response to client
     const statusCode = err.statusCode || 500;
     const message = statusCode === 500 ? 'Internal Server Error' : (err.message || 'Something went wrong');
 

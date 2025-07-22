@@ -4,6 +4,8 @@ import helmet from 'helmet';
 import morgan from 'morgan';
 import fileUpload from "express-fileupload";
 import cookieParser from "cookie-parser";
+import swaggerUi from 'swagger-ui-express';
+import swaggerDocument from './swagger/swagger-output.json' with { type: 'json' };
 
 import connectDB from "./config/db.js";
 import rateLimiter from './middleware/rateLimiter.js';
@@ -60,6 +62,7 @@ app.use('/api/tele-caller', dataEntryRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/lead-handler", teleCallerRoutes);
 app.use("/api/credit-manager", creditManagerRoutes);
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 
 app.use((req, res) => {
     res.status(404).json({ success: false, message: "Path not found!", path: req.path, method: req.method });
