@@ -44,7 +44,7 @@ router.get("/get-all-employees",primaryValidater,tryCatchMiddleware(getAllEmploy
 router.get("/get-details-employee/:id",tryCatchMiddleware(getEmployeeById))
 router.put("/edit-employee/:id",tryCatchMiddleware(editEmployee))
 router.put("/delete-employee/:id",tryCatchMiddleware(deleteEmployee))
-router.get("/get-cumulative-attetence/:id",tryCatchMiddleware(getCumulativeAttendances))
+router.get("/get-cumulative-attendance/:id",tryCatchMiddleware(getCumulativeAttendances))
 router.get("/get-cumulative-leaves/:employeeId",tryCatchMiddleware(getCumulativeEmployeeLeaves))
 
 
