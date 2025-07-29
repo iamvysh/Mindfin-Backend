@@ -123,20 +123,8 @@ export const loginEmployee = async (req, res, next) => {
             type: employee.designation?.designation,
         };
 
-        if (employee?.designation?.designation === "SUPERADMIN") {
-            tokenPayload.branch = employee.branch?.[0] || null;
-            const token = await JwtService.sign(tokenPayload);
-            return sendResponse(res, 200, { token, employee });
-        }
-        if (employee.branch?.length > 1) {
-            const populatedBranches = await employeeModel.findOne({ email }).populate("branch", "name");
-            return sendResponse(res, 200, { isMultipleBranch: true, branches: populatedBranches.branch });
-        }
-
-        tokenPayload.branch = employee.branch?.[0];
         const token = await JwtService.sign(tokenPayload);
         return sendResponse(res, 200, { token, employee });
-
     } catch (error) {
         next(error);
     }

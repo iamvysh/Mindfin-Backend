@@ -1,24 +1,29 @@
 import { Schema, model } from "mongoose";
 
-
-const branch = new Schema ({
-
-
-      
-    name:{
-        type:String,
+const branchSchema = new Schema({
+    name: {
+        type: String,
+        required: true // e.g. "ICICI - Andheri West"
     },
-    location:{
-        type:String,
+    location: {
+        type: String,
+        required: true // e.g. "Mumbai, Maharashtra"
     },
-    isDeleted:{
-        type:Boolean,
-        default:false
+    bankName: {
+        type: String,
+        required: true // e.g. "ICICI"
+    },
+    branchCode: {
+        type: String,
+        unique: true, // e.g. "ICICI456"
+        required: true
+    },
+    isDeleted: {
+        type: Boolean,
+        default: false
     }
+}, {
+    timestamps: true
+});
 
-
-},{
-    timestamps: true 
-})
-
-export default model("branch", branch);  
+export default model("branch", branchSchema);

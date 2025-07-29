@@ -7,13 +7,6 @@ export const tryCatchMiddleware = (handler) => {
 
       } catch (error) {
         console.error(error);
-        // res.status(500);
-        // // res.json({
-        // //   status: "failure",
-        // //   message: "something went wrong",
-        // //   error_message: error.message,
-        // // });
-
         return next(new CustomError(error))
       }
     };

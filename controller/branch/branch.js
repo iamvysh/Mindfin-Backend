@@ -3,21 +3,26 @@ import CustomError from '../../utils/customError.js';
 import sendResponse from '../../utils/sendResponse.js';
 
 
-
-
 export const createBranch = async (req, res, next) => {
-  const { name, location } = req.body;
 
-  // Check if the branch with the same name already exists
-  const existingBranch = await branchModel.findOne({ name });
-  if (existingBranch) {
-    return next(new CustomError("Branch with this name already exists", 400));
-  }
+    const { name, location, bankName, branchCode } = req.body;
 
-  // Create a new branch
-  const branch = new branchModel({ name, location });
-  await branch.save();
-  sendResponse(res, 201, branch);
+    if (!name || !location || !bankName || !branchCode) {
+      return next(new CustomError("All fields are required", 400));
+    }
+    const existingName = await branchModel.findOne({ name });
+    if (existingName) {
+      return next(new CustomError("Branch with this name already exists", 400));
+    }
+    const existingCode = await branchModel.findOne({ branchCode });
+    if (existingCode) {
+      return next(new CustomError("Branch with this code already exists", 400));
+    }
+
+    const newBranch = new branchModel({ name, location, bankName, branchCode });
+    await newBranch.save();
+
+    sendResponse(res, 201, newBranch);
 };
 
 export const getAllBranches = async (req, res, next) => {

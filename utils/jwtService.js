@@ -2,8 +2,6 @@ import jwt from 'jsonwebtoken';
 
 
 class JwtService {
-    // set expiry to 30m by default
-    // todo: implement refresh token also here.
     static sign(
         payload,
         expiry = '30d',
@@ -11,7 +9,6 @@ class JwtService {
     ) {
         const token = jwt.sign(payload, secret, { expiresIn: expiry });
         return token;
-       
     }
 
     static verify(token, secret = process.env.ACCESS_TOKEN_KEY) {
