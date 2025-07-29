@@ -19,12 +19,10 @@ const employee = new Schema({
     maritalStatus: {
         type: String,
         enum: ["MARRIED", "SINGLE"]
-
     },
     gender: {
         type: String,
         enum: ["MALE", "FEMALE", "OTHER"]
-
     },
     nationality: {
         type: String,
@@ -62,10 +60,6 @@ const employee = new Schema({
     employeeType: {
         type: String,
         enum: ["PERMENENT", "TEMPORARARY", "INTERN", "NOTICEPERIOD"],
-
-    },
-    professionalEmail: {
-        type: String,
     },
     branch: [
         {
@@ -134,26 +128,21 @@ const employee = new Schema({
     },
     appointmentLetter: {
         type: [String]
-
     },
     salarySlip: {
         type: [String]
-
     },
     relivingLetter: {
         type: [String]
-
     },
     experienceLetter: {
         type: [String]
     },
     aadharCard: {
         type: [String]
-
     },
     panCard: {
         type: [String]
-
     },
     password: {
         type: String

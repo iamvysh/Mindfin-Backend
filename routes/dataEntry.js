@@ -12,6 +12,4 @@ router.put("/update-a-lead/:id",primaryValidater,tryCatchMiddleware(updateLead))
 router.delete("/delete-a-lead/:id",primaryValidater,tryCatchMiddleware(deleteLead))
 router.get("/export-lead",primaryValidater,tryCatchMiddleware(exportLeads))
 
-
-
 export default router;

@@ -12,31 +12,17 @@ import leavesModel from "../../model/leavesModel.js";
 import JwtService from "../../utils/jwtService.js";
 import { Otp, welcomeEmployee } from "../../utils/emailTemplate.js";
 import sendMail from '../../utils/sendMail.js';
+import bcrypt from 'bcrypt';
 
 
 export const addEmployee = async (req, res, next) => {
 
-    const { email, phone, firstName, lastName, designation, employeeId, professionalEmail } = req.body;
+    const { firstName, lastName, email, phone, password, employeeId } = req.body;
 
-    const existingEmployee = await employeeModel.findOne({ email });
-    if (existingEmployee) {
+    const employeeExists = await employeeModel.findOne({ email });
+    if (employeeExists) {
         return next(new CustomError("Employee with this email already exists!", 400));
     }
-    const isExistingProfessionalEmail = await employeeModel.findOne({ professionalEmail });
-    if (isExistingProfessionalEmail) {
-        return next(new CustomError("Employee with this professional email already exists!", 400));
-    }
-
-    const newEmployee = new employeeModel({
-        firstName,
-        lastName,
-        email,
-        phone,
-        designation,
-        employeeId,
-        professionalEmail
-    });
-    await newEmployee.save();
 
     const existingOtp = await otpModel.findOne({ email });
     if (existingOtp) {
@@ -58,10 +44,22 @@ export const addEmployee = async (req, res, next) => {
         specialChars: false,
     });
     const encryptedOtp = await hashPassword(OTP);
-    await otpModel.create({
-        email: email,
-        otp: encryptedOtp,
+    await otpModel.create({ email: email, otp: encryptedOtp });
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const newEmployee = new employeeModel({
+        firstName,
+        lastName,
+        email,
+        phone,
+        password: hashedPassword,
+        designation: "68888585c08e287ca1800bc1",
+        employeeId
     });
+    await newEmployee.save();
+
     const msg = `
     <div style="font-family: 'Roboto', sans-serif; width: 100%;">
         <div style="background: #5AB2FF; padding: 10px 20px; border-radius: 3px; border: none">
@@ -78,89 +76,153 @@ export const addEmployee = async (req, res, next) => {
             © 2024 Kingster Education. All rights reserved.
         </p>
     </div>`;
+
     await sendMail(email, 'Account Authorization', msg);
-
     sendResponse(res, 200, "OTP sent to your email.");
-}
+};
 
-export const generatePassword = async (req, res, next) => {
-
-
-    const { email } = req.body
-
-    let isEmployeeExist = await employeeModel.findOne({ email })
-
-    if (!isEmployeeExist) {
-        return next(new CustomError("employee not found", 400))
-    }
-
-    let name = isEmployeeExist?.firstName
-
-
-    const OTP = otpGenerator.generate(4, {
-        digits: true,
-        lowerCaseAlphabets: false,
-        upperCaseAlphabets: false,
-        specialChars: false,
-    });
-
-    const encryptedOtp = await hashPassword(OTP);
-
-    const existingOtp = await otpModel.findOne({ email: isEmployeeExist?.email });
-    if (existingOtp) {
-        return sendResponse(res, 200, "OTP sent successfully");
-    }
-
-    await otpModel.create({
-        email: email,
-        otp: encryptedOtp,
-    });
-
-    // Split OTP into individual digits
-    const otpDigits = OTP.split("");
-
-
-
-
-
-    await transport.sendMail({
-        from: process.env.SMTP_MAIL,
-        to: email,
-        headers: `From: ${process.env.SMTP_MAIL}`,
-        subject: "Account Authorization",
-        html: Otp({ name, otpDigits }),
-    });
-
-
-
-
-    // res.cookie("email", isEmployeeExist?.email, { httpOnly: true });
-    res.cookie("email", isEmployeeExist?.email, { secure: true, sameSite: 'None' });
-
-
-
-    sendResponse(res, 200, isEmployeeExist?.email)
-}
-
-export const verifyGeneratePassword = async (req, res, next) => {
-
-    const { otp, email } = req.body
+export const verifyOtp = async (req, res, next) => {
+    const { otp, email } = req.body;
 
     const otpHolder = await otpModel.findOne({ email });
-
     if (!otpHolder) {
-        return next(new CustomError("Oops! Otp got expired", 400))
+        return next(new CustomError("Oops! Otp got expired!", 400));
     }
 
     const validUser = await comparePassword(otp, otpHolder?.otp);
 
     if (!validUser) {
-        return next(new CustomError("Invalid otp entered", 400));
+        return next(new CustomError("Invalid otp entered!", 400));
     }
     await otpModel.deleteMany({ email });
+    await employeeModel.updateOne({ email }, { $set: { isVerified: true } });
 
-    sendResponse(res, 200, 'otp verificication successfull')
-}
+    sendResponse(res, 200, 'Otp verificication successfull.');
+};
+
+export const loginEmployee = async (req, res, next) => {
+    try {
+        const { email, password } = req.body;
+
+        const employeeDoc = await employeeModel.findOne({ email }).populate("designation", "designation");
+        if (!employeeDoc) {
+            return next(new CustomError("Employee doesn't exist!", 404));
+        }
+        const isMatch = await bcrypt.compare(password, employeeDoc.password);
+        if (!isMatch) {
+            return next(new CustomError("Email or password is incorrect!", 400));
+        }
+        if (!employeeDoc.isVerified) {
+            return next(new CustomError("Please verify your email before logging in!", 403));
+        }
+        const employee = employeeDoc.toObject();
+        delete employee.password;
+        const tokenPayload = {
+            _id: employee._id,
+            email: employee.email,
+            type: employee.designation?.designation,
+        };
+
+        if (employee?.designation?.designation === "SUPERADMIN") {
+            tokenPayload.branch = employee.branch?.[0] || null;
+            const token = await JwtService.sign(tokenPayload);
+            return sendResponse(res, 200, { token, employee });
+        }
+        if (employee.branch?.length > 1) {
+            const populatedBranches = await employeeModel.findOne({ email }).populate("branch", "name");
+            return sendResponse(res, 200, { isMultipleBranch: true, branches: populatedBranches.branch });
+        }
+
+        tokenPayload.branch = employee.branch?.[0];
+        const token = await JwtService.sign(tokenPayload);
+        return sendResponse(res, 200, { token, employee });
+
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
+
+// export const generatePassword = async (req, res, next) => {
+
+
+//     const { email } = req.body
+
+//     let isEmployeeExist = await employeeModel.findOne({ email })
+
+//     if (!isEmployeeExist) {
+//         return next(new CustomError("employee not found", 400))
+//     }
+
+//     let name = isEmployeeExist?.firstName
+
+
+//     const OTP = otpGenerator.generate(4, {
+//         digits: true,
+//         lowerCaseAlphabets: false,
+//         upperCaseAlphabets: false,
+//         specialChars: false,
+//     });
+
+//     const encryptedOtp = await hashPassword(OTP);
+
+//     const existingOtp = await otpModel.findOne({ email: isEmployeeExist?.email });
+//     if (existingOtp) {
+//         return sendResponse(res, 200, "OTP sent successfully");
+//     }
+
+//     await otpModel.create({
+//         email: email,
+//         otp: encryptedOtp,
+//     });
+
+//     // Split OTP into individual digits
+//     const otpDigits = OTP.split("");
+
+
+
+
+
+//     await transport.sendMail({
+//         from: process.env.SMTP_MAIL,
+//         to: email,
+//         headers: `From: ${process.env.SMTP_MAIL}`,
+//         subject: "Account Authorization",
+//         html: Otp({ name, otpDigits }),
+//     });
+
+
+
+
+//     // res.cookie("email", isEmployeeExist?.email, { httpOnly: true });
+//     res.cookie("email", isEmployeeExist?.email, { secure: true, sameSite: 'None' });
+
+
+
+//     sendResponse(res, 200, isEmployeeExist?.email)
+// }
+
+// export const verifyGeneratePassword = async (req, res, next) => {
+
+//     const { otp, email } = req.body
+
+//     const otpHolder = await otpModel.findOne({ email });
+
+//     if (!otpHolder) {
+//         return next(new CustomError("Oops! Otp got expired", 400))
+//     }
+
+//     const validUser = await comparePassword(otp, otpHolder?.otp);
+
+//     if (!validUser) {
+//         return next(new CustomError("Invalid otp entered", 400));
+//     }
+//     await otpModel.deleteMany({ email });
+
+//     sendResponse(res, 200, 'otp verificication successfull')
+// }
 
 export const resetPasswordEmployee = async (req, res, next) => {
 
@@ -368,25 +430,6 @@ export const reSendOtpGeneratePassword = async (req, res, next) => {
         return next(new CustomError(error.message));
 
     }
-}
-
-export const verifyOtp = async (req, res, next) => {
-    const { otp, email } = req.body
-
-    const otpHolder = await otpModel.findOne({ email });
-    if (!otpHolder) {
-        return next(new CustomError("Oops! Otp got expired!", 400));
-    }
-
-    const validUser = await comparePassword(otp, otpHolder?.otp);
-
-    if (!validUser) {
-        return next(new CustomError("Invalid otp entered!", 400));
-    }
-    await otpModel.deleteMany({ email });
-    await employeeModel.updateOne({ email }, { $set: { isVerified: true } });
-
-    sendResponse(res, 200, 'Otp verificication successfull.');
 }
 
 export const getAllEmployees = async (req, res, next) => {
@@ -743,49 +786,6 @@ export const getCumulativeEmployeeLeaves = async (req, res, next) => {
 
 };
 
-export const loginEmployee = async (req, res, next) => {
-    try {
-        const { email, password } = req.body;
-
-        const employee = await employeeModel.findOne({ professionalEmail: email }).populate("designation", "designation");
-        if (!employee) {
-            return next(new CustomError("Invalid credentials!", 401));
-        }
-        if (!employee.isVerified) {
-            return next(new CustomError("Please verify your email before logging in!", 401));
-        }
-        const Password = await decryptData(employee?.password);
-        // Check password (assuming plain text, use bcrypt in real case)
-        if (Password !== password) {
-            return next(new CustomError("Invalid credentials!", 401));
-        }
-        if (employee?.designation?.designation === 'SUPERADMIN') {
-            const token = await JwtService.sign({ _id: employee._id, email: email, type: employee?.designation?.designation, branch: employee?.branch[0] || null });
-            employee.password = null;
-            return sendResponse(res, 200, { token, employee });
-        }
-
-        if (employee.branch.length > 1) {
-            let populateBranches = await employeeModel.findOne({ professionalEmail: email }).populate("branch", "name");
-
-            //   let  populateBranches = await employeeModel.findOne({ email:email }).populate("branch","name")
-            // res.cookie("professionalEmail", employee.professionalEmail, { httpOnly: true });
-            // res.cookie("employeeId", employee._id.toString(), { httpOnly: true });
-
-            return sendResponse(res, 200, {
-                isMultipleBranch: true,
-                branches: populateBranches.branch,
-            });
-        }
-
-        const token = await JwtService.sign({ _id: employee._id, email: email, type: employee?.designation?.designation, branch: employee?.branch[0] });
-        employee.password = null;
-        return sendResponse(res, 200, { token, employee });
-    } catch (error) {
-        next(error);
-    }
-};
-
 export const branchSelection = async (req, res, next) => {
 
     const { email, branch } = req.body;
@@ -835,7 +835,6 @@ export const whoAmI = async (req, res, next) => {
     sendResponse(res, 200, employee)
 }
 
-
 export const changeProfilePic = async (req, res, next) => {
 
     const body = req.body
@@ -853,7 +852,6 @@ export const changeProfilePic = async (req, res, next) => {
     sendResponse(res, 200, employee)
 
 }
-
 
 export const loginToMobile = async (req, res, next) => {
     try {

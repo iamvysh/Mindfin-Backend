@@ -1,5 +1,5 @@
 import express from "express";
-import { addEmployee, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, generatePassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, loginToMobile, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyGeneratePassword, verifyOtp, whoAmI } from "../controller/employee/employee.js";
+import { addEmployee, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, loginToMobile, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyOtp, whoAmI } from "../controller/employee/employee.js";
 import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { createPayRoll, deletePayRoll, getAllPayRolls, getPayRollById, updatePayRoll } from "../controller/payrolls/payRoll.js";
 import { createPaySlip, deletePaySlip, getAllPaySlips, getEmployeeCounts, getMonthlySalaryTotals, getPaySlipById, updatePaySlip } from "../controller/payrolls/paySlip.js";
@@ -17,8 +17,9 @@ const router = express.Router();
 
 
 
-router.post("/generate-password",tryCatchMiddleware(generatePassword))
-router.post("/verify-generate-password",tryCatchMiddleware(verifyGeneratePassword))
+// router.post("/generate-password",tryCatchMiddleware(generatePassword))
+// router.post("/verify-generate-password",tryCatchMiddleware(verifyGeneratePassword))
+
 router.post("/reset-the-password",tryCatchMiddleware(resetPasswordEmployee))
 router.post("/forgot-password",tryCatchMiddleware(forgotPassword))
 router.post("/verify-otp",tryCatchMiddleware(verifyOtp))
@@ -116,7 +117,6 @@ router.get("/get-upcoming-past-leaves",primaryValidater,tryCatchMiddleware(getLe
 router.post("/add-leave",primaryValidater,tryCatchMiddleware(AddLeave))
 
 //attendence
-
 
 router.post("/create-attendence",tryCatchMiddleware(createAttendance))
 router.get("/get-all-attendence",primaryValidater,tryCatchMiddleware(getAllAttendance))
