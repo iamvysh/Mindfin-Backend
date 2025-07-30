@@ -4,14 +4,14 @@ import sendResponse from "../../utils/sendResponse.js";
 
 
 
-export const getAllSalaryDefenitions = async (req, res, next) => {
+export const getAllSalaryDefinitions = async (req, res, next) => {
 
         const salaries = await salaryDefinitionModal.find();
         sendResponse(res, 200, salaries);
    
 };
 
-export const getSalaryDefenitionsById = async (req, res, next) => {
+export const getSalaryDefinitionsById = async (req, res, next) => {
 
         const { id } = req.params;
         const salary = await salaryDefinitionModal.findById(id);
@@ -23,7 +23,7 @@ export const getSalaryDefenitionsById = async (req, res, next) => {
    
 };
 
-export const createSalaryDefenitions = async (req, res, next) => {
+export const createSalaryDefinitions = async (req, res, next) => {
 
        const {designation} = req.body
 
@@ -34,12 +34,12 @@ export const createSalaryDefenitions = async (req, res, next) => {
 
        }
 
-        const newSalary = await salaryDefenitionModal.create(req.body);
+        const newSalary = await salaryDefinitionModal.create(req.body);
         sendResponse(res, 200, newSalary);
     
 };
 
-export const updateSalaryDefenitions = async (req, res, next) => {
+export const updateSalaryDefinitions = async (req, res, next) => {
         const { id } = req.params;
         const updatedSalary = await salaryDefinitionModal.findByIdAndUpdate(id, req.body, { new: true });
 
@@ -50,7 +50,7 @@ export const updateSalaryDefenitions = async (req, res, next) => {
     
 };
 
-export const deleteSalaryDefenitions = async (req, res, next) => {
+export const deleteSalaryDefinitions = async (req, res, next) => {
         const { id } = req.params;
         const deletedSalary = await salaryDefinitionModal.findByIdAndDelete(id);
 

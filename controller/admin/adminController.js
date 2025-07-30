@@ -69,7 +69,6 @@ export const assignLeadToEmployee = async (req, res, next) => {
    
 };
 
-
 export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {
     // try {
     //     // Get current month range
@@ -217,7 +216,6 @@ export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {
     }
 }
 
-
 export const getLeadCountsByMonthAndDesignation = async (req, res, next) => {
     try {
         const { month, year } = req.query;
@@ -307,7 +305,6 @@ export const getLeadCountsByMonthAndDesignation = async (req, res, next) => {
         next(err);
     }
 };
-
 
 export const getBranchTelecallerLeadCounts = async (req, res, next) => {
     try {
