@@ -32,6 +32,14 @@ const paySlip = new Schema({
   inconvenienceAllowence: {
     type: Number,
   },
+  hikeAmount: {
+    type: Number,
+    default: 0,
+  },
+  bonusAmount: {
+    type: Number,
+    default: 0,
+  },
   grossSalary: {
     type: Number,
   },

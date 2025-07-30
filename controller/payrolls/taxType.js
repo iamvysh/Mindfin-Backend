@@ -4,7 +4,7 @@ import CustomError from "../../utils/customError.js";
 import sendResponse from "../../utils/sendResponse.js";
 
 
-// CREATE Tax
+
 export const createTax = async (req, res, next) => {
         const { taxType, branch, value } = req.body;
 
@@ -19,7 +19,6 @@ export const createTax = async (req, res, next) => {
     
 };
 
-// GET ALL Taxes
 export const getAllTaxes = async (req, res, next) => {
 
     const {type,branch} = req.user
@@ -34,7 +33,6 @@ export const getAllTaxes = async (req, res, next) => {
    
 };
 
-// GET Tax by ID
 export const getTaxById = async (req, res, next) => {
         const { id } = req.params;
         const tax = await taxModel.findById(id).populate("branch");
@@ -47,7 +45,6 @@ export const getTaxById = async (req, res, next) => {
     
 };
 
-// UPDATE Tax
 export const updateTax = async (req, res, next) => {
         const { id } = req.params;
         const { taxType, branch, value } = req.body;
@@ -68,7 +65,6 @@ export const updateTax = async (req, res, next) => {
    
 };
 
-// DELETE Tax
 export const deleteTax = async (req, res, next) => {
         const { id } = req.params;
         const deletedTax = await taxModel.findByIdAndDelete(id);

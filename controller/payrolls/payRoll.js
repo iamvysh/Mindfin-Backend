@@ -8,112 +8,82 @@ import sendResponse from "../../utils/sendResponse.js";
 
 export const getAllPayRolls = async (req, res, next) => {
 
-   
-    const { branch, type } = req.user;
-    const { page = 1, limit = 10 } = req.query;
 
-    // If user is HR, only fetch payrolls from their own branch
-    const filter = type === 'HR' ? { branch } : {};
+  const { branch, type } = req.user;
+  const { page = 1, limit = 10 } = req.query;
 
-    const payRolls = await payRollModel
-      .find(filter)
-      .sort({createdAt:-1})
-      .populate("designation","designation")
-      .skip((page - 1) * limit)
-      .limit(Number(limit));
+  // If user is HR, only fetch payrolls from their own branch
+  const filter = type === 'HR' ? { branch } : {};
 
-    const total = await payRollModel.countDocuments(filter);
-    const totalPages = Math.ceil(total / limit);
+  const payRolls = await payRollModel
+    .find(filter)
+    .sort({ createdAt: -1 })
+    .populate("designation", "designation")
+    .skip((page - 1) * limit)
+    .limit(Number(limit));
 
-    sendResponse(res, 200, {
-      payRolls,
-      total,
-      totalPages,
-      currentPage: Number(page),
-      limit: Number(limit),
-    })
+  const total = await payRollModel.countDocuments(filter);
+  const totalPages = Math.ceil(total / limit);
+
+  sendResponse(res, 200, {
+    payRolls,
+    total,
+    totalPages,
+    currentPage: Number(page),
+    limit: Number(limit),
+  })
 };
 
 export const getPayRollById = async (req, res, next) => {
-        const { id } = req.params;
-        const payRoll = await payRollModel.findById(id);
+  const { id } = req.params;
+  const payRoll = await payRollModel.findById(id);
 
-        if (!payRoll) {
-            return next(new CustomError("Payroll record not found", 400));
-        }
-        sendResponse(res, 200, payRoll);
-    
+  if (!payRoll) {
+    return next(new CustomError("Payroll record not found", 400));
+  }
+  sendResponse(res, 200, payRoll);
+
 };
-
-// export const createPayRoll = async (req, res, next) => {
-
-//     const {type,branch} = req.user
-        
-//         const { paymentName, designation, paymentMonth, paymentYear } = req.body;
-        
-//         const existingPayRoll = await payRollModel.findOne({ paymentName, designation, paymentMonth, paymentYear,branch });
-//         if (existingPayRoll) {
-//             return next(new CustomError("Payroll entry already exists for this month and year", 400));
-//         }
-        
-//         const newPayRoll = await payRollModel.create(req.body);
-//         sendResponse(res, 200, newPayRoll);
-   
-// };
 
 export const createPayRoll = async (req, res, next) => {
 
-      const { type, branch: userBranch } = req.user;
-      const {
-        paymentName,
-        designation,
-        paymentMonth,
-        paymentYear,
-        branch: bodyBranch,
-      } = req.body;
-  
-      const branch = type === 'HR' ? userBranch : bodyBranch;
-  
-      if (!branch) {
-        return next(new CustomError("Branch is required", 400));
-      }
-  
-      const existingPayRoll = await payRollModel.findOne({
-        paymentName,
-        designation,
-        paymentMonth,
-        paymentYear,
-        branch,
-      });
-  
-      if (existingPayRoll) {
-        return next(
-          new CustomError("Payroll entry already exists for this month and year", 400)
-        );
-      }
-  
-      const newPayRoll = await payRollModel.create({
-        ...req.body,
-        branch,
-      });
-  
-      sendResponse(res, 200, newPayRoll);
-    
-  };
-  
+  const { type, branch: userBranch } = req.user;
+  const {
+    paymentName,
+    designation,
+    paymentMonth,
+    paymentYear,
+    branch: bodyBranch,
+  } = req.body;
 
+  const branch = type === 'HR' ? userBranch : bodyBranch;
 
-// export const updatePayRoll = async (req, res, next) => {
-//         const { id } = req.params;
-//         const updatedPayRoll = await payRollModel.findByIdAndUpdate(id, req.body, { new: true });
+  if (!branch) {
+    return next(new CustomError("Branch is required", 400));
+  }
 
-//         if (!updatedPayRoll) {
-//             return next(new CustomError("Payroll record not found", 400));
-//         }
-//         sendResponse(res, 200, updatedPayRoll);
-    
-// };
+  const existingPayRoll = await payRollModel.findOne({
+    paymentName,
+    designation,
+    paymentMonth,
+    paymentYear,
+    branch,
+  });
 
+  if (existingPayRoll) {
+    return next(
+      new CustomError("Payroll entry already exists for this month and year", 400)
+    );
+  }
+
+  const newPayRoll = await payRollModel.create({
+    ...req.body,
+    branch,
+  });
+
+  sendResponse(res, 200, newPayRoll);
+
+};
 
 export const updatePayRoll = async (req, res, next) => {
   try {
@@ -154,12 +124,12 @@ export const updatePayRoll = async (req, res, next) => {
 };
 
 export const deletePayRoll = async (req, res, next) => {
-        const { id } = req.params;
-        const deletedPayRoll = await payRollModel.findByIdAndDelete(id);
+  const { id } = req.params;
+  const deletedPayRoll = await payRollModel.findByIdAndDelete(id);
 
-        if (!deletedPayRoll) {
-            return next(new CustomError("Payroll record not found", 400));
-        }
-        sendResponse(res, 200, { message: "Payroll record deleted successfully" });
-    
+  if (!deletedPayRoll) {
+    return next(new CustomError("Payroll record not found", 400));
+  }
+  sendResponse(res, 200, { message: "Payroll record deleted successfully" });
+
 };

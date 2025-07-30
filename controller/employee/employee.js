@@ -130,9 +130,6 @@ export const loginEmployee = async (req, res, next) => {
     }
 };
 
-
-
-
 // export const generatePassword = async (req, res, next) => {
 
 

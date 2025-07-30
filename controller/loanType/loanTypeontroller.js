@@ -4,10 +4,6 @@ import sendResponse from "../../utils/sendResponse.js";
 
 
 
-
-
-
-// Create LoanType
 export const createLoanType = async (req, res, next) => {
   try {
     const { loanName } = req.body;
@@ -25,7 +21,6 @@ export const createLoanType = async (req, res, next) => {
   }
 };
 
-// Get All LoanTypes with Pagination
 export const getAllLoanTypes = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
@@ -57,7 +52,6 @@ export const getAllLoanTypes = async (req, res, next) => {
   }
 };
 
-// Get Single LoanType by ID
 export const getLoanTypeById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -75,7 +69,6 @@ export const getLoanTypeById = async (req, res, next) => {
   }
 };
 
-// Update LoanType
 export const updateLoanType = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -105,7 +98,6 @@ export const updateLoanType = async (req, res, next) => {
   }
 };
 
-// Delete LoanType (Soft Delete)
 export const deleteLoanType = async (req, res, next) => {
   try {
     const { id } = req.params;

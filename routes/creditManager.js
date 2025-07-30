@@ -2,7 +2,7 @@ import express from "express";
 import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { primaryValidater } from "../middleware/auth.js";
 import { getAllTelecallers } from "../controller/admin/adminController.js";
-import { addBankDetails, addFollowUp, deleteBankDetail, deleteFollowUp, exportCreditManagerLeads, getAllBankDetails, getBankDetailById, getFilteredCreditManagerLeads, getFollowUpById, getFollowUpsByBankDetail, getLeadsForCreditManagerForBankDetails, updateBankDetail, updateFollowUp, updateLeadStatus } from "../controller/creditManager/creditManagerController.js";
+import { addBankDetails, addFollowUp, deleteBankDetail, deleteFollowUp, exportCreditManagerLeads, getAllBankDetails, getBankDetailById, getFilteredCreditManagerLeads, getFollowUpById, getFollowUpsByBankDetail, getLeadsForCreditManagerForBankDetails, updateBankDetail, updateFollowUp, updateLeadStatus, fetchCibilScore, createTopUpLoan, getCreditManagerStats } from "../controller/creditManager/creditManagerController.js";
 import { getALeadByID, updateLead } from "../controller/leads/leadController.js";
 import { getAllCreditManagersWithLeadCount } from "../controller/teleCaller/teleCallerController.js";
 const router = express.Router();
@@ -25,6 +25,10 @@ router.get("/get-a-bank-follow-up/:id", tryCatchMiddleware(getFollowUpById)); //
 router.put("/bank/:id", tryCatchMiddleware(updateFollowUp)); //✅
 router.delete("/bank/:id", tryCatchMiddleware(deleteFollowUp)); //✅
 router.get("/get-credit-manager/bank-leads", primaryValidater, tryCatchMiddleware(getLeadsForCreditManagerForBankDetails)) //✅
+
+router.post("/check-cibil", primaryValidater, tryCatchMiddleware(fetchCibilScore));
+router.post("/topup-loan", primaryValidater, tryCatchMiddleware(createTopUpLoan));
+router.get("/statistics", primaryValidater, tryCatchMiddleware(getCreditManagerStats));
 
 
 export default router;

@@ -1,80 +1,13 @@
 import CustomError from '../../utils/customError.js';
 import sendResponse from '../../utils/sendResponse.js';
-import Leads from "../../model/leadsModel.js"
+import Leads from "../../model/leadsModel.js";
 import mongoose from 'mongoose';
 import moment from "moment-timezone";
 import bankModel from '../../model/bankModel.js';
 import followUpModel from '../../model/followUpModel.js';
+import TopUpLoan from "../../model/topUpLoanModel.js";
 
 
-// export const getFilteredCreditManagerLeads = async (req, res, next) => {
-//   try {
-//     const userId = req.user._id;
-//     const branchId = req.user.branch;
-//     const { teleCaller, status, date,search, page = 1, limit = 10 } = req.query;
-
-//     const timezone = "Asia/Kolkata";
-//     const match = {
-//       creditManger: userId,
-//       branch: branchId,
-//     };
-
-//     // Optional Filters
-//     if (teleCaller) {
-//       match.assignedTo = teleCaller;
-//     }
-
-//     if (status) {
-//       match.status = status;
-//     }
-
-//     if (date) {
-//       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
-//       const endOfDay = moment.tz(date, timezone).endOf("day").toDate();
-//       match.AssignedDate = { $gte: startOfDay, $lte: endOfDay };
-//     }
-
-//     if (search) {
-//     match.leadName = { $regex: search, $options: "i" };
-//     }
-
-//     const pageNum = parseInt(page);
-//     const pageSize = parseInt(limit);
-//     const skip = (pageNum - 1) * pageSize;
-
-//     const [leads, totalCount] = await Promise.all([
-//       Leads.find(match)
-//         .populate("assignedTo", "name email phone")
-//         .populate("createdBy", "name email")
-//         .populate("creditManger", "name email")
-//         .populate("branch", "name")
-//         .skip(skip)
-//         .limit(pageSize)
-//         .sort({ AssignedDate: -1 }),
-
-//       Leads.countDocuments(match),
-//     ]);
-
-//     return sendResponse(res, 200, {
-//       data: leads,
-//       pagination: {
-//         total: totalCount,
-//         page: pageNum,
-//         limit: pageSize,
-//         totalPages: Math.ceil(totalCount / pageSize),
-//       },
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
-
-// adjust the path accordingly
-
-
-
-// if loan Type is Personal Loan  add loanType is Personal Loan for Business Business Loan
 
 export const getFilteredCreditManagerLeads = async (req, res, next) => {
   try {
@@ -85,8 +18,8 @@ export const getFilteredCreditManagerLeads = async (req, res, next) => {
     const timezone = "Asia/Kolkata";
 
     const matchStage = {
-     creditManger: new mongoose.Types.ObjectId(userId),
-     branch: new mongoose.Types.ObjectId(branchId),
+      creditManger: new mongoose.Types.ObjectId(userId),
+      branch: new mongoose.Types.ObjectId(branchId),
     };
 
     if (teleCaller) {
@@ -221,7 +154,6 @@ export const getFilteredCreditManagerLeads = async (req, res, next) => {
   }
 };
 
-
 export const exportCreditManagerLeads = async (req, res, next) => {
   try {
     const userId = req.user._id;
@@ -268,45 +200,42 @@ export const exportCreditManagerLeads = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
-
+};
 
 export const updateLeadStatus = async (req, res) => {
 
-    const { leadId } = req.params;
-    const { status } = req.body;
+  const { leadId } = req.params;
+  const { status } = req.body;
 
-    console.log(leadId,"idd");
-    
+  console.log(leadId, "idd");
 
-    // Validate allowed statuses
-    const validStatuses = ["INPROGRESS", "PENDING", "CLOSED", "DROPPED"];
-    if (!validStatuses.includes(status)) {
-      return res.status(400).json({ message: "Invalid status value" });
-    }
 
-    // Update the lead status
-    const updatedLead = await Leads.findByIdAndUpdate(
-      leadId,
-      { status },
-      { new: true }
-    );
+  // Validate allowed statuses
+  const validStatuses = ["INPROGRESS", "PENDING", "CLOSED", "DROPPED"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ message: "Invalid status value" });
+  }
 
-    if (!updatedLead) {
-            return next(new CustomError("Lead not found", 400));
-    }
+  // Update the lead status
+  const updatedLead = await Leads.findByIdAndUpdate(
+    leadId,
+    { status },
+    { new: true }
+  );
 
-    // res.status(200).json({
-    //   message: "Lead status updated successfully",
-    //   data: updatedLead,
-    // });
+  if (!updatedLead) {
+    return next(new CustomError("Lead not found", 400));
+  }
 
-    return sendResponse(res,200,updatedLead)
+  // res.status(200).json({
+  //   message: "Lead status updated successfully",
+  //   data: updatedLead,
+  // });
 
-  
+  return sendResponse(res, 200, updatedLead)
+
+
 };
-
-
 
 export const addBankDetails = async (req, res, next) => {
   try {
@@ -334,7 +263,7 @@ export const addBankDetails = async (req, res, next) => {
 
     if (!validStatus.includes(status)) {
       // return res.status(400).json({ message: "Invalid status value" });
-                  return next(new CustomError("Invalid status value", 400));
+      return next(new CustomError("Invalid status value", 400));
 
     }
 
@@ -372,18 +301,17 @@ export const addBankDetails = async (req, res, next) => {
   } catch (error) {
     next(error);
   }
-}
+};
 
 export const getAllBankDetails = async (req, res, next) => {
   try {
-    const {id} = req.params
-    const bankDetails = await bankModel.find({lead:id}).populate("lead bankName loanType");
+    const { id } = req.params
+    const bankDetails = await bankModel.find({ lead: id }).populate("lead bankName loanType");
     return sendResponse(res, 200, bankDetails);
   } catch (error) {
     next(error);
   }
 };
-
 
 export const getBankDetailById = async (req, res, next) => {
   try {
@@ -399,7 +327,6 @@ export const getBankDetailById = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const updateBankDetail = async (req, res, next) => {
   try {
@@ -514,7 +441,6 @@ export const getFollowUpById = async (req, res, next) => {
   }
 };
 
-
 export const updateFollowUp = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -534,7 +460,6 @@ export const updateFollowUp = async (req, res, next) => {
   }
 };
 
-
 export const deleteFollowUp = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -550,75 +475,6 @@ export const deleteFollowUp = async (req, res, next) => {
     next(error);
   }
 };
-
-// export const getLeadsForCreditManagerForBankDetails = async (req, res,next) => {
-//   try {
-//     const { search, status, creditManagerAssignedDate, leadId } = req.query;
-
-//     const creditManagerId = req.user._id;
-//     const branchId = req.user.branch;
-
-//     // Build lead query
-//     const leadQuery = {
-//       creditManger: creditManagerId,
-//       branch: branchId,
-//     };
-
-//     if (leadId && mongoose.Types.ObjectId.isValid(leadId)) {
-//       leadQuery._id = leadId;
-//     }
-
-//     if (status) {
-//       leadQuery.status = status;
-//     }
-
-//     if (creditManagerAssignedDate) {
-//       const date = new Date(creditManagerAssignedDate);
-//       const nextDay = new Date(date);
-//       nextDay.setDate(nextDay.getDate() + 1);
-
-//       leadQuery.creditManagerAssignedDate = {
-//         $gte: date,
-//         $lt: nextDay,
-//       };
-//     }
-
-//     if (search) {
-//       leadQuery.leadName = { $regex: search, $options: "i" };
-//     }
-
-//     // Fetch leads
-//     const leads = await Leads.find(leadQuery)
-//       .populate("branch")
-//       .populate("createdBy", "name")
-//       .populate("assignedTo", "name")
-//       .populate("creditManger", "name")
-//       .lean();
-
-//     // For each lead, check confirmed bank
-//     const enrichedLeads = await Promise.all(
-//       leads.map(async (lead) => {
-//         const confirmedBank = await bankModel.findOne({
-//           lead: lead._id,
-//           status: "Confirmed",
-//         }).lean();
-
-//         return {
-//           ...lead,
-//           confirmedBankDetails: confirmedBank || null,
-//           hasConfirmedBank: !!confirmedBank,
-//         };
-//       })
-//     );
-
-//     res.status(200).json({ success: true, leads: enrichedLeads });
-//   } catch (error) {
-//     console.error("Error fetching leads:", error);
-//     res.status(500).json({ success: false, message: "Server error" });
-//   }
-// };
-
-
 
 export const getLeadsForCreditManagerForBankDetails = async (req, res, next) => {
   try {
@@ -700,3 +556,64 @@ export const getLeadsForCreditManagerForBankDetails = async (req, res, next) => 
     next(error);
   }
 };
+
+//fetch cibil score
+export const fetchCibilScore = async (req, res, next) => {
+  try {
+    const { panCard, dateOfBirth } = req.body;
+
+    if (!panCard || !dateOfBirth) {
+      return next(new CustomError("PAN card and DOB are required", 400));
+    }
+
+    // Mock CIBIL score logic (replace with real API later)
+    const score = Math.floor(Math.random() * (850 - 650 + 1)) + 650;
+
+    return sendResponse(res, 200, {
+      cibilScore: score,
+      remarks: score >= 750 ? "Excellent" : "Average",
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+//add top-up-api's
+export const createTopUpLoan = async (req, res, next) => {
+  try {
+    const { applicant, type, amount, cibilScore, remarks } = req.body;
+
+    if (!["Personal", "Business"].includes(type)) {
+      return next(new CustomError("Invalid loan type", 400));
+    }
+
+    const loan = await TopUpLoan.create({ applicant, type, amount, cibilScore, remarks });
+
+    return sendResponse(res, 201, loan);
+  } catch (error) {
+    next(error);
+  }
+};
+
+////Graph data representation
+export const getCreditManagerStats = async (req, res, next) => {
+  try {
+    const creditMangerId = req.user._id;
+
+    const totalLeads = await Leads.countDocuments({ creditManger: creditMangerId });
+    const closedLeads = await Leads.countDocuments({ creditManger: creditMangerId, status: "CLOSED" });
+    const avgCibil = await TopUpLoan.aggregate([
+      { $match: { applicant: { $exists: true } } },
+      { $group: { _id: null, avgScore: { $avg: "$cibilScore" } } },
+    ]);
+
+    return sendResponse(res, 200, {
+      totalLeads,
+      closedLeads,
+      avgCibilScore: avgCibil[0]?.avgScore || 0,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

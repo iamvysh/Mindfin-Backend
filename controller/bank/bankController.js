@@ -25,7 +25,6 @@ export const createBank = async (req, res, next) => {
   sendResponse(res, 201, bank);
 };
 
-
 export const getAllBanks = async (req, res, next) => {
   try {
     const banks = await bankPrototypeModal.find({ isDeleted: false });
@@ -34,7 +33,6 @@ export const getAllBanks = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const getBankById = async (req, res, next) => {
   try {
@@ -50,8 +48,6 @@ export const getBankById = async (req, res, next) => {
     next(error);
   }
 };
-
-
 
 export const updateBank = async (req, res, next) => {
   const { id } = req.params;
@@ -92,7 +88,6 @@ if (!updatedBank) {
 sendResponse(res, 200, { message: "Bank updated successfully", bank: updatedBank });
 
 };
-
 
 export const deleteBank = async (req, res, next) => {
   try {
