@@ -1,5 +1,6 @@
 import express from "express";
-import { addEmployee, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginEmployee, loginToMobile, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, verifyOtp, whoAmI } from "../controller/employee/employee.js";
+import { signUp, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginToMobile, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, whoAmI, sendInvitationLink, getOtp, verifyOtp, setPassword,
+ loginEmployee } from "../controller/employee/employee.js";
 import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { createPayRoll, deletePayRoll, getAllPayRolls, getPayRollById, updatePayRoll } from "../controller/payrolls/payRoll.js";
 import { createPaySlip, deletePaySlip, getAllPaySlips, getEmployeeCounts, getMonthlySalaryTotals, getPaySlipById, updatePaySlip } from "../controller/payrolls/paySlip.js";
@@ -22,7 +23,6 @@ const router = express.Router();
 
 router.post("/reset-the-password",tryCatchMiddleware(resetPasswordEmployee))
 router.post("/forgot-password",tryCatchMiddleware(forgotPassword))
-router.post("/verify-otp",tryCatchMiddleware(verifyOtp))
 router.post("/resent-otp/generate-password",tryCatchMiddleware(reSendOtpGeneratePassword))
 router.post("/resent-otp/forgot-password",tryCatchMiddleware(reSendOtpForgotPassword))
 router.get("/getUser",primaryValidater, tryCatchMiddleware(whoAmI))
@@ -30,7 +30,11 @@ router.get("/getUser",primaryValidater, tryCatchMiddleware(whoAmI))
 
 
 //auth
-
+router.post("/signup",tryCatchMiddleware(signUp))
+router.post("/send-invite", tryCatchMiddleware(sendInvitationLink));
+router.post("/get-otp", tryCatchMiddleware(getOtp));
+router.post("/verify-otp", tryCatchMiddleware(verifyOtp));
+router.post("/set-password", tryCatchMiddleware(setPassword));
 router.post("/login",tryCatchMiddleware(loginEmployee))
 router.post("/branch-login",tryCatchMiddleware(branchSelection))
 router.post("/login-to-mobile",tryCatchMiddleware(loginToMobile))
@@ -40,7 +44,7 @@ router.post("/login-to-mobile",tryCatchMiddleware(loginToMobile))
 
 //employee
 
-router.post("/add-employee",tryCatchMiddleware(addEmployee))
+// router.post("/add-employee",tryCatchMiddleware(addEmployee))
 router.get("/get-all-employees",primaryValidater,tryCatchMiddleware(getAllEmployees))
 router.get("/get-details-employee/:id",tryCatchMiddleware(getEmployeeById))
 router.put("/edit-employee/:id",tryCatchMiddleware(editEmployee))

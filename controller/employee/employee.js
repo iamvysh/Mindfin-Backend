@@ -15,7 +15,7 @@ import sendMail from '../../utils/sendMail.js';
 import bcrypt from 'bcrypt';
 
 
-export const addEmployee = async (req, res, next) => {
+export const signUp = async (req, res, next) => {
 
     const { firstName, lastName, email, phone, password, employeeId } = req.body;
 
@@ -81,6 +81,91 @@ export const addEmployee = async (req, res, next) => {
     sendResponse(res, 200, "OTP sent to your email.");
 };
 
+export const sendInvitationLink = async (req, res, next) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return next(new CustomError("Email is required!", 400));
+    }
+
+    const link = `http://localhost:5173/get-otp`;
+
+    const msg = `
+        <div style="font-family: 'Roboto', sans-serif; width: 100%;">
+            <div style="background: #5AB2FF; padding: 10px 20px; border-radius: 3px; border: none">
+               <a href="#" style="font-size:1.6em; color: white; text-decoration:none; font-weight:600">KINGSTER</a>
+            </div>
+            <p>Hello!</p>
+            <p>You’ve been invited to join Kingster. Please click the link below to start your onboarding process by verifying your email and setting your password:</p>
+            <div style="text-align: center; margin: 20px 0;">
+                <a href="${link}" style="background: #5AB2FF; color: white; padding: 10px 20px; border-radius: 4px; text-decoration: none; font-size: 1.2em;">Complete Registration</a>
+            </div>
+            <p>If the button above doesn’t work, you can also copy and paste this URL into your browser:</p>
+            <p style="word-break: break-all;"><a href="${link}">${link}</a></p>
+            <p>Thanks,<br>Kingster Team</p>
+            <p>
+                You can contact us at our office located at 1st Floor, Swathanthriya Samara Smrithi Bhavan, Nandavanam Road, Palayam (P.O), Thiruvananthapuram, Kerala - 695033, or reach us via phone at +91-811 199 5931 or email at info@kingster.edu.in.<br>
+                © 2024 Kingster Education. All rights reserved.
+            </p>
+        </div>
+    `;
+
+    await sendMail(email, 'You are invited to Kingster 🎉', msg);
+    sendResponse(res, 200, "Invitation link has been sent to the employee’s email.");
+};
+
+export const getOtp = async (req, res, next) => {
+    const { email } = req.body;
+
+    if (!email) {
+        return next(new CustomError("Email is required!", 400));
+    }
+
+    const existingOtp = await otpModel.findOne({ email });
+    if (existingOtp) {
+        const now = new Date();
+        const otpCreatedAt = new Date(existingOtp.createdAt);
+        const diffMs = now - otpCreatedAt;
+        const diffMinutes = diffMs / (1000 * 60);
+
+        if (diffMinutes < 5) {
+            return sendResponse(res, 200, "An OTP has already been sent to your email.");
+        } else {
+            await otpModel.deleteMany({ email });
+        }
+    }
+
+    const OTP = otpGenerator.generate(4, {
+        digits: true,
+        lowerCaseAlphabets: false,
+        upperCaseAlphabets: false,
+        specialChars: false,
+    });
+
+    const encryptedOtp = await hashPassword(OTP);
+    await otpModel.create({ email, otp: encryptedOtp });
+
+    const msg = `
+        <div style="font-family: 'Roboto', sans-serif; width: 100%;">
+            <div style="background: #5AB2FF; padding: 10px 20px; border-radius: 3px; border: none">
+               <a href="" style="font-size:1.6em; color: white; text-decoration:none; font-weight:600">KINGSTER</a>
+            </div>
+            <p>Hello!</p>
+            <p>Thank you for choosing Kingster. Use the following OTP to verify your account. This OTP is valid for 2 minutes.</p>
+            <div style="display: flex; align-items: center; justify-content: center; width: 100%;">
+               <div style="background: #5AB2FF; color: white; width: fit-content; border-radius: 3px; padding: 5px 10px; font-size: 1.4em;">${OTP}</div>
+            </div>
+            <p>Thanks,<br>Kingster Team</p>
+            <p>
+                You can contact us at our office located at 1st Floor, Swathanthriya Samara Smrithi Bhavan, Nandavanam Road, Palayam (P.O), Thiruvananthapuram, Kerala - 695033, or reach us via phone at +91-811 199 5931 or email at info@kingster.edu.in.<br>
+                © 2024 Kingster Education. All rights reserved.
+            </p>
+        </div>`;
+
+    await sendMail(email, 'Your OTP from Kingster', msg);
+    sendResponse(res, 200, "OTP sent to your email.");
+};
+
 export const verifyOtp = async (req, res, next) => {
     const { otp, email } = req.body;
 
@@ -100,8 +185,26 @@ export const verifyOtp = async (req, res, next) => {
     sendResponse(res, 200, 'Otp verificication successfull.');
 };
 
+export const setPassword = async (req, res, next) => {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+        return next(new CustomError("Email and password are required", 400));
+    }
+
+    const employee = await employeeModel.findOne({ email });
+    if (!employee) {
+        return next(new CustomError("Employee not found", 404));
+    }
+
+    const hashedPassword = await hashPassword(password);
+    employee.password = hashedPassword;
+    await employee.save();
+
+    sendResponse(res, 200, "Password set successfully. You can now log in.");
+};
+
 export const loginEmployee = async (req, res, next) => {
-    try {
         const { email, password } = req.body;
 
         const employeeDoc = await employeeModel.findOne({ email }).populate("designation", "designation");
@@ -125,89 +228,9 @@ export const loginEmployee = async (req, res, next) => {
 
         const token = await JwtService.sign(tokenPayload);
         return sendResponse(res, 200, { token, employee });
-    } catch (error) {
-        next(error);
-    }
 };
 
-// export const generatePassword = async (req, res, next) => {
 
-
-//     const { email } = req.body
-
-//     let isEmployeeExist = await employeeModel.findOne({ email })
-
-//     if (!isEmployeeExist) {
-//         return next(new CustomError("employee not found", 400))
-//     }
-
-//     let name = isEmployeeExist?.firstName
-
-
-//     const OTP = otpGenerator.generate(4, {
-//         digits: true,
-//         lowerCaseAlphabets: false,
-//         upperCaseAlphabets: false,
-//         specialChars: false,
-//     });
-
-//     const encryptedOtp = await hashPassword(OTP);
-
-//     const existingOtp = await otpModel.findOne({ email: isEmployeeExist?.email });
-//     if (existingOtp) {
-//         return sendResponse(res, 200, "OTP sent successfully");
-//     }
-
-//     await otpModel.create({
-//         email: email,
-//         otp: encryptedOtp,
-//     });
-
-//     // Split OTP into individual digits
-//     const otpDigits = OTP.split("");
-
-
-
-
-
-//     await transport.sendMail({
-//         from: process.env.SMTP_MAIL,
-//         to: email,
-//         headers: `From: ${process.env.SMTP_MAIL}`,
-//         subject: "Account Authorization",
-//         html: Otp({ name, otpDigits }),
-//     });
-
-
-
-
-//     // res.cookie("email", isEmployeeExist?.email, { httpOnly: true });
-//     res.cookie("email", isEmployeeExist?.email, { secure: true, sameSite: 'None' });
-
-
-
-//     sendResponse(res, 200, isEmployeeExist?.email)
-// }
-
-// export const verifyGeneratePassword = async (req, res, next) => {
-
-//     const { otp, email } = req.body
-
-//     const otpHolder = await otpModel.findOne({ email });
-
-//     if (!otpHolder) {
-//         return next(new CustomError("Oops! Otp got expired", 400))
-//     }
-
-//     const validUser = await comparePassword(otp, otpHolder?.otp);
-
-//     if (!validUser) {
-//         return next(new CustomError("Invalid otp entered", 400));
-//     }
-//     await otpModel.deleteMany({ email });
-
-//     sendResponse(res, 200, 'otp verificication successfull')
-// }
 
 export const resetPasswordEmployee = async (req, res, next) => {
 
