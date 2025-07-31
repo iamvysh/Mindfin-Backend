@@ -205,29 +205,29 @@ export const setPassword = async (req, res, next) => {
 };
 
 export const loginEmployee = async (req, res, next) => {
-        const { email, password } = req.body;
+    const { email, password } = req.body;
 
-        const employeeDoc = await employeeModel.findOne({ email }).populate("designation", "designation");
-        if (!employeeDoc) {
-            return next(new CustomError("Employee doesn't exist!", 404));
-        }
-        const isMatch = await bcrypt.compare(password, employeeDoc.password);
-        if (!isMatch) {
-            return next(new CustomError("Email or password is incorrect!", 400));
-        }
-        if (!employeeDoc.isVerified) {
-            return next(new CustomError("Please verify your email before logging in!", 403));
-        }
-        const employee = employeeDoc.toObject();
-        delete employee.password;
-        const tokenPayload = {
-            _id: employee._id,
-            email: employee.email,
-            type: employee.designation?.designation,
-        };
+    const employeeDoc = await employeeModel.findOne({ email }).populate("designation", "designation");
+    if (!employeeDoc) {
+        return next(new CustomError("Employee doesn't exist!", 404));
+    }
+    const isMatch = await bcrypt.compare(password, employeeDoc.password);
+    if (!isMatch) {
+        return next(new CustomError("Email or password is incorrect!", 400));
+    }
+    if (!employeeDoc.isVerified) {
+        return next(new CustomError("Please verify your email before logging in!", 403));
+    }
+    const employee = employeeDoc.toObject();
+    delete employee.password;
+    const tokenPayload = {
+        _id: employee._id,
+        email: employee.email,
+        type: employee.designation?.designation,
+    };
 
-        const token = await JwtService.sign(tokenPayload);
-        return sendResponse(res, 200, { token, employee });
+    const token = await JwtService.sign(tokenPayload);
+    return sendResponse(res, 200, { token, employee });
 };
 
 
@@ -439,6 +439,39 @@ export const reSendOtpGeneratePassword = async (req, res, next) => {
 
     }
 }
+
+
+
+export const addEmployee = async (req, res, next) => {
+
+    const { firstName, lastName, phone, email, profileImg, DOB, maritalStatus, gender, nationality, familyMember, emergencyNumber,
+        aadharNumber, bloodGroup, address, state, city, zipCode, employeeId, userName, employeeType, branch, designation, workingDays,
+        workingHours, dateOfJoin, dateOfLeave, jobType, officeLocation, salary, salaryStartDate, salaryEndDate, bankName, bankBranchName,
+        accountName, accountNo, IFSC, SWIFT, IBAN, attendanceLocation, bioMetricIp, appointmentLetter, salarySlip, relievingLetter,
+        experienceLetter, aadharCard, panCard } = req.body;
+
+    const existingEmployee = await employeeModel.findOne({
+        $or: [{ email }, { phone }]
+    });
+
+    if (existingEmployee) {
+        if (existingEmployee.email === email) {
+            return next(new CustomError("Employee with this email already exists!", 400));
+        } else if (existingEmployee.phone === phone) {
+            return next(new CustomError("Employee with this phone number already exists!", 400));
+        }
+    }
+
+    const newEmployee = new employeeModel({
+        firstName, lastName, phone, email, profileImg, DOB, maritalStatus, gender, nationality, familyMember, emergencyNumber,
+        aadharNumber, bloodGroup, address, state, city, zipCode, employeeId, userName, employeeType, branch, designation, workingDays,
+        workingHours, dateOfJoin, dateOfLeave, jobType, officeLocation, salary, salaryStartDate, salaryEndDate, bankName, bankBranchName,
+        accountName, accountNo, IFSC, SWIFT, IBAN, attendanceLocation, bioMetricIp, appointmentLetter, salarySlip, relievingLetter,
+        experienceLetter, aadharCard, panCard
+    });
+    await newEmployee.save();
+    sendResponse(res, 201, "New employee saved successfully.");
+};
 
 export const getAllEmployees = async (req, res, next) => {
 

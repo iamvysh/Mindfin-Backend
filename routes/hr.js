@@ -1,6 +1,6 @@
 import express from "express";
 import { signUp, branchSelection, changeProfilePic, deleteEmployee, editEmployee, forgotPassword, getAllEmployees, getALLEmployeesForPayRoll, getCumulativeAttendances, getCumulativeEmployeeLeaves, getEmployeeById, loginToMobile, reSendOtpForgotPassword, reSendOtpGeneratePassword, resetPasswordEmployee, whoAmI, sendInvitationLink, getOtp, verifyOtp, setPassword,
- loginEmployee } from "../controller/employee/employee.js";
+ loginEmployee, addEmployee } from "../controller/employee/employee.js";
 import { tryCatchMiddleware } from "../utils/tryCatch.js";
 import { createPayRoll, deletePayRoll, getAllPayRolls, getPayRollById, updatePayRoll } from "../controller/payrolls/payRoll.js";
 import { createPaySlip, deletePaySlip, getAllPaySlips, getEmployeeCounts, getMonthlySalaryTotals, getPaySlipById, updatePaySlip } from "../controller/payrolls/paySlip.js";
@@ -44,7 +44,7 @@ router.post("/login-to-mobile",tryCatchMiddleware(loginToMobile))
 
 //employee
 
-// router.post("/add-employee",tryCatchMiddleware(addEmployee))
+router.post("/add-employee",tryCatchMiddleware(addEmployee))
 router.get("/get-all-employees",primaryValidater,tryCatchMiddleware(getAllEmployees))
 router.get("/get-details-employee/:id",tryCatchMiddleware(getEmployeeById))
 router.put("/edit-employee/:id",tryCatchMiddleware(editEmployee))
