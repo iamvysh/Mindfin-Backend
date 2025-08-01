@@ -88,7 +88,7 @@ export const sendInvitationLink = async (req, res, next) => {
         return next(new CustomError("Email is required!", 400));
     }
 
-    const link = `http://localhost:5173/get-otp`;
+    const link = `http://localhost:5173/generate-password`;
 
     const msg = `
         <div style="font-family: 'Roboto', sans-serif; width: 100%;">
