@@ -111,7 +111,7 @@ router.delete("/delete-holiday/:id",tryCatchMiddleware(deleteHoliday))
 
 //leaves
 
-router.post("/create-leave",tryCatchMiddleware(createLeave))
+router.post("/create-leave", primaryValidater, tryCatchMiddleware(createLeave))
 router.get("/get-all-leaves",primaryValidater,tryCatchMiddleware(getAllLeaves))
 router.get("/get-leave/:id",tryCatchMiddleware(getLeaveById))
 router.put("/update-leave/:id",primaryValidater,tryCatchMiddleware(updateLeave))
