@@ -3,19 +3,19 @@ import { Schema, model } from "mongoose";
 const branchSchema = new Schema({
     name: {
         type: String,
-        required: true // e.g. "ICICI - Andheri West"
+        required: true 
     },
     location: {
         type: String,
-        required: true // e.g. "Mumbai, Maharashtra"
+        required: true 
     },
     bankName: {
         type: String,
-        required: true // e.g. "ICICI"
+        required: true 
     },
     branchCode: {
         type: String,
-        unique: true, // e.g. "ICICI456"
+        unique: true,
         required: true
     },
     isDeleted: {

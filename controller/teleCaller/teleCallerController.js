@@ -8,8 +8,6 @@ import employeeModel from "../../model/employeeModel.js";
 import leadHistoryModel from "../../model/leadHistoryModel.js";
 
 
-
-
 export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
   try {
     const { branch, _id: assignedTo } = req.user;
@@ -58,7 +56,7 @@ export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
     ]);
 
     // Response
-    return sendResponse(res, 200,{
+    return sendResponse(res, 200, {
       total,
       page: parseInt(page),
       limit: perPage,
@@ -69,7 +67,6 @@ export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const exportLeadToTeleCaller = async (req, res, next) => {
   try {
@@ -110,7 +107,6 @@ export const exportLeadToTeleCaller = async (req, res, next) => {
     next(error);
   }
 };
-
 
 export const getAllCreditManagersWithLeadCount = async (req, res, next) => {
   try {
@@ -158,12 +154,11 @@ export const getAllCreditManagersWithLeadCount = async (req, res, next) => {
       })
     );
 
-    return sendResponse(res, 200,results);
+    return sendResponse(res, 200, results);
   } catch (error) {
     next(new CustomError(error.message || "Internal Server Error", 500));
   }
 };
-
 
 export const assignCreditManagerToLead = async (req, res, next) => {
   try {
@@ -201,13 +196,13 @@ export const updateLeadStatusAndCreateHistory = async (req, res, next) => {
     }
 
 
-    console.log(leadId,"id");
-    
+    console.log(leadId, "id");
+
     // 1. Find and update lead status
     const lead = await Leads.findById(leadId);
 
-    console.log(lead,"llll");
-    
+    console.log(lead, "llll");
+
     if (!lead) {
       return next(new CustomError("Lead not found", 404));
     }
@@ -235,45 +230,40 @@ export const updateLeadStatusAndCreateHistory = async (req, res, next) => {
   }
 };
 
-
-
 export const getRecentLeadHistories = async (req, res, next) => {
   try {
-    const {id}= req.params
+    const { id } = req.params
     // Fetch latest lead histories (e.g., last 20, sorted by newest first)
-    const histories = await leadHistoryModel.find({lead:id})
+    const histories = await leadHistoryModel.find({ lead: id })
       .populate("lead", "leadName phone status loanType") // populate selected lead fields
       .populate("createdBy", "firstName lastName email")   // optional: show who created the history
       .sort({ createdAt: -1 }) // newest first
-      // .limit(20);             
+    // .limit(20);             
 
-    return sendResponse(res, 200,histories);
+    return sendResponse(res, 200, histories);
   } catch (error) {
     next(new CustomError(error.message || "Failed to fetch lead histories", 500));
   }
 };
 
+export const updateLeadHistory = async (req, res, next) => {
+  const { id } = req.params; // leadHistory ID
+  const updateData = req.body;
+
+  const updatedHistory = await leadHistoryModel.findByIdAndUpdate(id, updateData, {
+    new: true,
+    runValidators: true,
+  });
+
+  if (!updatedHistory) {
+    return next(new CustomError("Lead history not found", 404));
+
+  }
+
+  return sendResponse(res, 200, updatedHistory);
 
 
-export const updateLeadHistory = async (req, res,next) => {
-    const { id } = req.params; // leadHistory ID
-    const updateData = req.body;
-
-    const updatedHistory = await leadHistoryModel.findByIdAndUpdate(id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updatedHistory) {
-      return next(new CustomError("Lead history not found", 404));
-
-    }
-
-        return sendResponse(res, 200,updatedHistory);
-
- 
 };
-
 
 export const deleteLeadHistory = async (req, res, next) => {
   try {
@@ -290,7 +280,6 @@ export const deleteLeadHistory = async (req, res, next) => {
     next(error); // forward unexpected errors to the global error handler
   }
 };
-
 
 export const getAssignedLeadStats = async (req, res, next) => {
   try {
@@ -310,11 +299,11 @@ export const getAssignedLeadStats = async (req, res, next) => {
 
 
     console.log();
-    
+
     const stats = await Leads.aggregate([
       {
         $match: {
-          assignedTo: new mongoose.Types.ObjectId(userId) ,
+          assignedTo: new mongoose.Types.ObjectId(userId),
           branch: new mongoose.Types.ObjectId(branchId),
           AssignedDate: {
             $gte: startDate.toDate(),
@@ -356,9 +345,6 @@ export const getAssignedLeadStats = async (req, res, next) => {
   }
 };
 
-
-
-
 export const getAssignedLeadsByStatus = async (req, res, next) => {
   try {
     const { month, year } = req.query;
@@ -377,7 +363,7 @@ export const getAssignedLeadsByStatus = async (req, res, next) => {
     const statusCounts = await Leads.aggregate([
       {
         $match: {
-         assignedTo: new mongoose.Types.ObjectId(userId) ,
+          assignedTo: new mongoose.Types.ObjectId(userId),
           branch: new mongoose.Types.ObjectId(branchId),
           AssignedDate: {
             $gte: startDate.toDate(),

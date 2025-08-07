@@ -1,7 +1,6 @@
 import CustomError from "../utils/customError.js";
 import JwtService from "../utils/jwtService.js";
-
-
+import employeeModel from "../model/employeeModel.js";
 
 
 export const primaryValidater = async (req, res, next) => {
@@ -12,9 +11,19 @@ export const primaryValidater = async (req, res, next) => {
     }
 
     const token = authHeader.split(" ")[1];
-    const { _id, email, type } = await JwtService.verify(token);
+    const { _id, email, type, branch } = await JwtService.verify(token);
+    const user = await employeeModel.findById(_id).select("_id email type branch");
+    if (!user) {
+      return next(new CustomError("User not found", 404));
+    }
 
-    req.user = { _id, email, type };
+    req.user = {
+      _id: user._id,
+      email: user.email,
+      type: user.type,
+      branch: user.branch
+    };
+
     next();
   } catch (err) {
     return next(new CustomError("unAuthorized", 401));

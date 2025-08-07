@@ -9,139 +9,59 @@ import mongoose from 'mongoose';
 
 
 
-export const getAllTelecallers = async(req,res,next)=>{
+export const getAllTelecallers = async (req, res, next) => {
 
-     const { branch } = req.user;
+    const { branch } = req.user;
 
-     console.log(branch,"branch");
-     
+    if (!branch) {
+        return next(new CustomError("Branch ID is missing in the user object", 400));
+    }
 
-        if (!branch) {
-            return next(new CustomError("Branch ID is missing in the user object", 400));
-        }
+    const telecallers = await employeeModel.find({
+        // branch: new mongoose.Types.ObjectId(branch),
+        branch: { $in: branch.map(id => new mongoose.Types.ObjectId(id)) },
+        isDeleted: false
+    }).populate({
+        path: 'designation',
+        match: { designation: 'TELECALLER' } // match the designation name
+    });
 
-        const telecallers = await employeeModel.find({
-            branch: new mongoose.Types.ObjectId(branch),
-            // branch: branch,
-            isDeleted: false
-        })
-        .populate({
-            path: 'designation',
-            match: { designation: 'Tele caller' } // match the designation name
-        });
-         
+    // Filter out employees whose designation was not matched
+    const filteredTelecallers = telecallers.filter(emp => emp.designation !== null);
 
-        // console.log(telecallers,"telecallers");
-        
-
-
-        // Filter out employees whose designation was not matched
-        const filteredTelecallers = telecallers.filter(emp => emp.designation !== null);
-
-        return sendResponse(res, 200, filteredTelecallers);
+    return sendResponse(res, 200, filteredTelecallers);
 }
 
 export const assignLeadToEmployee = async (req, res, next) => {
-        const { leadId, employeeId } = req.body;
+    const { leadId, employeeId } = req.body;
 
-        // Validate inputs
-        if (!leadId || !employeeId) {
-            return next(new CustomError("leadId and employeeId are required", 400));
-        }
+    // Validate inputs
+    if (!leadId || !employeeId) {
+        return next(new CustomError("leadId and employeeId are required", 400));
+    }
 
-        // Ensure valid MongoDB ObjectIds
-        if (!mongoose.Types.ObjectId.isValid(leadId) || !mongoose.Types.ObjectId.isValid(employeeId)) {
-            return next(new CustomError("Invalid leadId or employeeId", 400));
-        }
+    // Ensure valid MongoDB ObjectIds
+    if (!mongoose.Types.ObjectId.isValid(leadId) || !mongoose.Types.ObjectId.isValid(employeeId)) {
+        return next(new CustomError("Invalid leadId or employeeId", 400));
+    }
 
-        // Find and update the lead
-        const updatedLead = await Leads.findByIdAndUpdate(
-            leadId,
-            { assignedTo: employeeId ,AssignedDate: new Date()},
-            { new: true }
-        ).populate('assignedTo', 'firstName lastName email'); // optional: show assigned employee info
+    // Find and update the lead
+    const updatedLead = await Leads.findByIdAndUpdate(
+        leadId,
+        { assignedTo: employeeId, AssignedDate: new Date() },
+        { new: true }
+    ).populate('assignedTo', 'firstName lastName email'); // optional: show assigned employee info
 
-        if (!updatedLead) {
-            return next(new CustomError("Lead not found", 404));
-        }
+    if (!updatedLead) {
+        return next(new CustomError("Lead not found", 404));
+    }
 
-        return sendResponse(res, 200,updatedLead);
-   
+    return sendResponse(res, 200, updatedLead);
+
 };
 
 export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {
-    // try {
-    //     // Get current month range
-    //     const now = new Date();
-    //     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-    //     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-
-    //     // Step 1: Find IDs of desired designations
-    //     const designationsToTrack = ["Admin", "Data entry", "Digital Marketing"];
-
-    //     const designationDocs = await designationModel.find({
-    //         designation: { $in: designationsToTrack }
-    //     });
-
-    //     const designationMap = {};
-    //     designationDocs.forEach(d => {
-    //         designationMap[d._id.toString()] = d.designation;
-    //     });
-
-    //     const designationIds = designationDocs.map(d => d._id);
-
-    //     // Step 2: Aggregate leads created this month by users with those designations
-    //     const results = await Leads.aggregate([
-    //         {
-    //             $match: {
-    //                 LeadCreatedDate: {
-    //                     $gte: startOfMonth,
-    //                     $lte: endOfMonth
-    //                 }
-    //             }
-    //         },
-    //         {
-    //             $lookup: {
-    //                 from: "employees",
-    //                 localField: "createdBy",
-    //                 foreignField: "_id",
-    //                 as: "creator"
-    //             }
-    //         },
-    //         { $unwind: "$creator" },
-    //         {
-    //             $match: {
-    //                 "creator.designation": { $in: designationIds }
-    //             }
-    //         },
-    //         {
-    //             $group: {
-    //                 _id: "$creator.designation",
-    //                 totalLeads: { $sum: 1 }
-    //             }
-    //         }
-    //     ]);
-
-    //     // Step 3: Map back to readable designation names
-    //     const leadCounts = {};
-    //     designationsToTrack.forEach(d => {
-    //         leadCounts[d] = 0; // default to 0
-    //     });
-
-    //     results.forEach(r => {
-    //         const designationId = r._id.toString();
-    //         const readableName = designationMap[designationId];
-    //         if (readableName) {
-    //             leadCounts[readableName] = r.totalLeads;
-    //         }
-    //     });
-
-    //     return sendResponse(res, 200, leadCounts);
-    // } catch (err) {
-    //     next(err);
-    // }
-
-      try {
+    try {
         const { branch } = req.user;
 
         if (!branch) {
@@ -152,7 +72,7 @@ export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-        const designationsToTrack = ["Admin", "Data entry", "Digital Marketing"];
+        const designationsToTrack = ["ADMIN", "Data entry", "Digital Marketing"];
 
         // Step 1: Get designation IDs
         const designationDocs = await designationModel.find({
@@ -171,7 +91,9 @@ export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {
             {
                 $match: {
                     LeadCreatedDate: { $gte: startOfMonth, $lte: endOfMonth },
-                    branch: new  mongoose.Types.ObjectId(branch)
+                    // branch: new mongoose.Types.ObjectId(branch)
+                    branch: { $in: branch.map(id => new mongoose.Types.ObjectId(id)) }
+
                 }
             },
             {
@@ -210,7 +132,7 @@ export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {
             }
         });
 
-        return sendResponse(res, 200,leadCounts);
+        return sendResponse(res, 200, leadCounts);
     } catch (err) {
         next(err);
     }
@@ -233,7 +155,7 @@ export const getLeadCountsByMonthAndDesignation = async (req, res, next) => {
         const startOfMonth = new Date(selectedYear, selectedMonth, 1);
         const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
 
-        const designationsToTrack = ["Admin", "Data entry", "Digital Marketing"];
+        const designationsToTrack = ["ADMIN", "Data entry", "Digital Marketing"];
 
 
         // Find designations from DB
@@ -255,9 +177,9 @@ export const getLeadCountsByMonthAndDesignation = async (req, res, next) => {
                     LeadCreatedDate: {
                         $gte: startOfMonth,
                         $lte: endOfMonth
-                    },              
-                   branch: new mongoose.Types.ObjectId(branch)
-
+                    },
+                    //branch: new mongoose.Types.ObjectId(branch)
+                    branch: { $in: branch.map(id => new mongoose.Types.ObjectId(id)) }
                 }
             },
             {
@@ -309,7 +231,7 @@ export const getLeadCountsByMonthAndDesignation = async (req, res, next) => {
 export const getBranchTelecallerLeadCounts = async (req, res, next) => {
     try {
 
-        const {branch}  = req.user
+        const { branch } = req.user;
         const { month, year } = req.query;
 
         if (!branch) {
@@ -326,7 +248,7 @@ export const getBranchTelecallerLeadCounts = async (req, res, next) => {
 
         // Step 1: Get TELECALLER designation ID
         const telecallerDesignation = await designationModel.findOne({
-            designation: "Tele caller"
+            designation: "TELECALLER"
         });
 
         if (!telecallerDesignation) {
@@ -336,7 +258,8 @@ export const getBranchTelecallerLeadCounts = async (req, res, next) => {
         // Step 2: Get all telecallers in that branch
         const telecallers = await employeeModel.find({
             designation: telecallerDesignation._id,
-            branch: branch,
+            // branch: branch,
+            branch: { $in: branch.map(id => new mongoose.Types.ObjectId(id)) },
             isDeleted: false
         });
 
@@ -381,7 +304,7 @@ export const getBranchTelecallerLeadCounts = async (req, res, next) => {
         return sendResponse(
             res,
             200,
-          
+
             result
         );
     } catch (err) {
