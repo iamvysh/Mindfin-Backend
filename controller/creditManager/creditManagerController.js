@@ -33,7 +33,7 @@ export const getFilteredCreditManagerLeads = async (req, res, next) => {
     if (date) {
       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
       const endOfDay = moment.tz(date, timezone).endOf("day").toDate();
-      matchStage.AssignedDate = { $gte: startOfDay, $lte: endOfDay };
+      matchStage.assignedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
     if (search) {
@@ -124,7 +124,7 @@ export const getFilteredCreditManagerLeads = async (req, res, next) => {
           preserveNullAndEmptyArrays: true,
         },
       },
-      { $sort: { AssignedDate: -1 } },
+      { $sort: { assignedDate: -1 } },
       { $skip: skip },
       { $limit: pageSize }
     );
@@ -178,7 +178,7 @@ export const exportCreditManagerLeads = async (req, res, next) => {
     if (date) {
       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
       const endOfDay = moment.tz(date, timezone).endOf("day").toDate();
-      match.AssignedDate = { $gte: startOfDay, $lte: endOfDay };
+      match.assignedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
     // Search by leadName only
@@ -191,7 +191,7 @@ export const exportCreditManagerLeads = async (req, res, next) => {
       .populate("createdBy", "name email")
       .populate("creditManger", "name email")
       .populate("branch", "name")
-      .sort({ AssignedDate: -1 });
+      .sort({ assignedDate: -1 });
 
     return sendResponse(res, 200, {
       data: leads,

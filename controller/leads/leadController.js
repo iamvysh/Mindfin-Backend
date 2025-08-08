@@ -4,156 +4,9 @@ import Leads from "../../model/leadsModel.js"
 import loanTypeModel from '../../model/loanTypeModel.js';
 
 
-
-// export const bulkUploadLeads = async (req, res,next) => {
-
-//         const {type,branch,_id} = req.user
-//         const leadsData = req.body;
-
-//         // Validate if the request body is an array
-//         if (!Array.isArray(leadsData)) {
-            
-//             return next(new CustomError('Request body must be an array of leads'));
-//         }
-
-//         // Add current date to each lead
-//         const leadsWithDate = leadsData.map(lead => ({
-//             ...lead,
-//             branch: branch,
-//             createdBy:_id
-//         }));
-
-//         // Insert multiple leads
-//         const insertedLeads = await Leads.insertMany(leadsWithDate);
-
-       
-//          sendResponse(res,200,insertedLeads)
-   
-// }; 
-
-
-
-// export const getAllLeads = async (req,res,next) => {
-//         const {type, branch,_id} = req.user;
-//         const page = parseInt(req.query.page) || 1;
-//         const limit = parseInt(req.query.limit) || 10;
-//         const skip = (page - 1) * limit;
-//         const { search, date } = req.query;
-
-//         // Build query object
-//         let query = type === 'SUPERADMIN' ? {} : {branch: branch};
-
-//         // Add search by leadName if provided
-//         if (search) {
-//             query.leadName = { $regex: search, $options: 'i' }; // Case-insensitive search
-//         }
-
-//         // Add date filtering if provided
-//         if (date) {
-//             const filterDate = new Date(date);
-//             const nextDay = new Date(filterDate);
-//             nextDay.setDate(nextDay.getDate() + 1);
-            
-//             query.LeadCreatedDate = {
-//                 $gte: filterDate,
-//                 $lt: nextDay
-//             };
-//         }
-        
-//         // Get total count for pagination
-//         const totalLeads = await Leads.countDocuments(query);
-        
-//         // Get paginated leads
-//         const leads = await Leads.find(query)
-//             .skip(skip)
-//             .limit(limit)
-//             .sort({ LeadCreatedDate: -1 }); // Sort by creation date, newest first
-
-//         // Calculate total pages
-//         const totalPages = Math.ceil(totalLeads / limit);
-
-//         sendResponse(res, 200, {
-//             leads,
-//             pagination: {
-//                 currentPage: page,
-//                 totalPages,
-//                 totalLeads,
-//                 leadsPerPage: limit
-//             }
-//         });
-   
-// }
-
-// export const bulkUploadLeads = async (req, res, next) => {
-
-//         const { type, branch, _id } = req.user;
-//         const leadsData = req.body;
-
-//         if (!Array.isArray(leadsData)) {
-//             return next(new CustomError('Request body must be an array of leads'));
-//         }
-
-//         // Extract all emails and phones from request
-//         const emails = leadsData.map(lead => lead.email).filter(Boolean);
-//         const phones = leadsData.map(lead => lead.phone).filter(Boolean);
-
-//         console.log(emails,"emails");
-//         console.log(phones,"phones");
-        
-
-//         // Find duplicates already in DB
-//         const existingLeads = await Leads.find({
-//             $or: [
-//                 { email: { $in: emails } },
-//                 { phone: { $in: phones } }
-//             ]
-//         });
-
-//         const existingEmails = new Set(existingLeads.map(lead => lead.email));
-//         const existingPhones = new Set(existingLeads.map(lead => lead.phone));
-
-//         console.log(existingEmails,"x-email");
-//         console.log(existingPhones,"x-phone");
-        
-
-
-//         const uniqueLeads = [];
-//         const duplicateLeads = [];
-
-//         leadsData.forEach(lead => {
-//             if (existingEmails.has(lead.email) || existingPhones.has(lead.phone)) {
-//                 duplicateLeads.push(lead);
-//             } else {
-//                 uniqueLeads.push({
-//                     ...lead,
-//                     branch: branch,
-//                     createdBy: _id
-//                 });
-//             }
-//         });
-
-
-//         console.log(uniqueLeads,"uleads");
-//         console.log(duplicateLeads,"duleads");
-        
-
-//         // Insert only unique leads
-//         const insertedLeads = uniqueLeads.length > 0 ? await Leads.insertMany(uniqueLeads) : [];
-
-//         sendResponse(res, 200, {
-//             insertedLeads,
-//             duplicateLeads,
-//             hasDuplicates: duplicateLeads.length > 0
-//         });
-
-   
-// };
-
-
-
 export const bulkUploadLeads = async (req, res, next) => {
   try {
-    const { type, branch, _id } = req.user;
+    const { branch, _id } = req.user;
     const leadsData = req.body;
 
     if (!Array.isArray(leadsData)) {
@@ -242,8 +95,6 @@ export const bulkUploadLeads = async (req, res, next) => {
   }
 };
 
-
-
 export const getAllLeads = async (req, res, next) => {
     const { type, branch, _id } = req.user;
     const page = parseInt(req.query.page) || 1;
@@ -255,13 +106,13 @@ export const getAllLeads = async (req, res, next) => {
     // Build base query object based on user type
     let query = {};
 
-    if (type === 'Data entry') {
+    if (type === 'DATAENTRY') {
         
         query = {
             branch: branch,
             createdBy: _id
         };
-    } else if (type === 'Admin') {
+    } else if (type === 'ADMIN') {
         query = {
             branch: branch
         };
@@ -313,7 +164,6 @@ export const getAllLeads = async (req, res, next) => {
     }
 };
 
-
 export const getALeadByID = async (req,res,next) => {
     const {id} = req.params
 
@@ -351,24 +201,6 @@ export const deleteLead = async (req,res,next) => {
 
     sendResponse(res,200,lead)
 }       
-
-// export const exportLeads = async (req,res,next) => {
-//     const {type, branch} = req.user;
-//     const { search, date } = req.query;
-
-//     // Build query object
-//     let query = type === 'SUPERADMIN' ? {} : {branch: branch};
-
-//     const leads = await Leads.find(query)           
-//             .sort({ LeadCreatedDate: -1 }); 
-        
-//     if(!leads){ 
-//         return next(new CustomError('Leads not found'))
-//     }
-
-//     sendResponse(res,200,leads) 
-// }   
-
 
 export const exportLeads = async (req, res, next) => {
     const { type, branch, _id } = req.user;

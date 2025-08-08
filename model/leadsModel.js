@@ -4,9 +4,6 @@ const leads = new Schema({
   leadName: {
     type: String,
   },
-  // leadName:{
-  //     type:String
-  // },
   email: {
     type: String,
   },
@@ -19,9 +16,6 @@ const leads = new Schema({
   location: {
     type: String,
   },
-  // loanType: {
-  //   type: String,
-  // },
   loanType: {
     type: Schema.Types.ObjectId,
     ref: "loanType",  
@@ -44,7 +38,7 @@ const leads = new Schema({
     type: Schema.Types.ObjectId,
     ref: "employee",
   },
-  AssignedDate: {
+  assignedDate: {
     type: Date,
   },
   creditManger: {

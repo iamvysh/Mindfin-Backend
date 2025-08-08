@@ -20,7 +20,7 @@ export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
 
     // Initialize filters
     const filters = {
-      branch: new mongoose.Types.ObjectId(branch),
+      branch: { $in: branch.map((b) => new mongoose.Types.ObjectId(b)) },
       assignedTo: new mongoose.Types.ObjectId(assignedTo),
     };
 
@@ -34,12 +34,12 @@ export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
       filters.leadName = { $regex: name, $options: "i" };
     }
 
-    // Filter by exact AssignedDate (start and end of the day in IST)
+    // Filter by exact assignedDate (start and end of the day in IST)
     if (date) {
       const timezone = "Asia/Kolkata";
       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
       const endOfDay = moment.tz(date, timezone).endOf("day").toDate();
-      filters.AssignedDate = { $gte: startOfDay, $lte: endOfDay };
+      filters.assignedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
     // Pagination values
@@ -49,7 +49,7 @@ export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
     // Query and count
     const [leads, total] = await Promise.all([
       Leads.find(filters)
-        .sort({ AssignedDate: -1 })
+        .sort({ assignedDate: -1 })
         .skip(skip)
         .limit(perPage),
       Leads.countDocuments(filters),
@@ -96,11 +96,11 @@ export const exportLeadToTeleCaller = async (req, res, next) => {
       const timezone = "Asia/Kolkata";
       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
       const endOfDay = moment.tz(date, timezone).endOf("day").toDate();
-      filters.AssignedDate = { $gte: startOfDay, $lte: endOfDay };
+      filters.assignedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
     // Fetch all matching leads
-    const leads = await Leads.find(filters).sort({ AssignedDate: -1 });
+    const leads = await Leads.find(filters).sort({ assignedDate: -1 });
 
     return sendResponse(res, 200, leads);
   } catch (error) {
@@ -305,7 +305,7 @@ export const getAssignedLeadStats = async (req, res, next) => {
         $match: {
           assignedTo: new mongoose.Types.ObjectId(userId),
           branch: new mongoose.Types.ObjectId(branchId),
-          AssignedDate: {
+          assignedDate: {
             $gte: startDate.toDate(),
             $lte: endDate.toDate(),
           },
@@ -314,9 +314,9 @@ export const getAssignedLeadStats = async (req, res, next) => {
       {
         $group: {
           _id: {
-            day: { $dayOfMonth: "$AssignedDate" },
-            month: { $month: "$AssignedDate" },
-            year: { $year: "$AssignedDate" },
+            day: { $dayOfMonth: "$assignedDate" },
+            month: { $month: "$assignedDate" },
+            year: { $year: "$assignedDate" },
           },
           count: { $sum: 1 },
         },
@@ -365,7 +365,7 @@ export const getAssignedLeadsByStatus = async (req, res, next) => {
         $match: {
           assignedTo: new mongoose.Types.ObjectId(userId),
           branch: new mongoose.Types.ObjectId(branchId),
-          AssignedDate: {
+          assignedDate: {
             $gte: startDate.toDate(),
             $lte: endDate.toDate(),
           },

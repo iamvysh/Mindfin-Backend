@@ -6,9 +6,6 @@ import designationModel from '../../model/designationModel.js';
 import mongoose from 'mongoose';
 
 
-
-
-
 export const getAllTelecallers = async (req, res, next) => {
 
     const { branch } = req.user;
@@ -48,7 +45,7 @@ export const assignLeadToEmployee = async (req, res, next) => {
     // Find and update the lead
     const updatedLead = await Leads.findByIdAndUpdate(
         leadId,
-        { assignedTo: employeeId, AssignedDate: new Date() },
+        { assignedTo: employeeId, assignedDate: new Date() },
         { new: true }
     ).populate('assignedTo', 'firstName lastName email'); // optional: show assigned employee info
 
@@ -72,7 +69,7 @@ export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {
         const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
         const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59);
 
-        const designationsToTrack = ["ADMIN", "Data entry", "Digital Marketing"];
+        const designationsToTrack = ["ADMIN", "DATAENTRY"];
 
         // Step 1: Get designation IDs
         const designationDocs = await designationModel.find({
@@ -155,7 +152,7 @@ export const getLeadCountsByMonthAndDesignation = async (req, res, next) => {
         const startOfMonth = new Date(selectedYear, selectedMonth, 1);
         const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59);
 
-        const designationsToTrack = ["ADMIN", "Data entry", "Digital Marketing"];
+        const designationsToTrack = ["ADMIN", "DATAENTRY", "SUPERADMIN", "HR", "TELECALLER", "CREDITMANAGER", "BRANCHMANAGER", "EMPLOYEE"];
 
 
         // Find designations from DB
@@ -274,7 +271,7 @@ export const getBranchTelecallerLeadCounts = async (req, res, next) => {
             {
                 $match: {
                     assignedTo: { $in: telecallerIds },
-                    AssignedDate: {
+                    assignedDate: {
                         $gte: startOfMonth,
                         $lte: endOfMonth
                     }
