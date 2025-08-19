@@ -10,31 +10,21 @@ import leadHistoryModel from "../../model/leadHistoryModel.js";
 
 export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
   try {
+    let { date, status, name, page = 1, limit = 10, sortBy = "assignedDate", order = "desc" } = req.query;
     const { branch, _id: assignedTo } = req.user;
-    const { date, status, name, page = 1, limit = 10 } = req.query;
 
-    // Validate user context
-    if (!branch || !assignedTo) {
+    if (!branch?.length || !assignedTo) {
       return next(new CustomError("Branch and user ID are required", 400));
     }
 
-    // Initialize filters
+    // --- Prepare filters ---
     const filters = {
-      branch: { $in: branch.map((b) => new mongoose.Types.ObjectId(b)) },
-      assignedTo: new mongoose.Types.ObjectId(assignedTo),
+      branch: { $in: branch.map(b => new mongoose.Types.ObjectId(b)) },
+      assignedTo: new mongoose.Types.ObjectId(assignedTo)
     };
 
-    // Filter by status
-    if (status) {
-      filters.status = status;
-    }
-
-    // Partial name search
-    if (name) {
-      filters.leadName = { $regex: name, $options: "i" };
-    }
-
-    // Filter by exact assignedDate (start and end of the day in IST)
+    if (status) filters.status = status;
+    if (name) filters.leadName = { $regex: name, $options: "i" };
     if (date) {
       const timezone = "Asia/Kolkata";
       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
@@ -42,27 +32,45 @@ export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
       filters.assignedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
-    // Pagination values
-    const skip = (parseInt(page) - 1) * parseInt(limit);
-    const perPage = parseInt(limit);
+    // --- Pagination & sorting ---
+    page = Math.max(1, parseInt(page));
+    limit = Math.max(1, Math.min(parseInt(limit), 100));
+    const skip = (page - 1) * limit;
 
-    // Query and count
+    const sortOptions = {
+      leadName: { leadName: order === "asc" ? 1 : -1 },
+      loanAmount: { loanAmount: order === "asc" ? 1 : -1 },
+      assignedDate: { assignedDate: order === "asc" ? 1 : -1 },
+      createdAt: { createdAt: order === "asc" ? 1 : -1 }
+    };
+    const sortCriteria = sortOptions[sortBy] || { assignedDate: -1 };
+
+    // --- Query ---
     const [leads, total] = await Promise.all([
       Leads.find(filters)
-        .sort({ assignedDate: -1 })
+        .populate("loanType", "loanName")
+        .sort(sortCriteria)
         .skip(skip)
-        .limit(perPage),
-      Leads.countDocuments(filters),
+        .limit(limit)
+        .lean(),
+      Leads.countDocuments(filters)
     ]);
 
-    // Response
-    return sendResponse(res, 200, {
+    const totalPages = Math.ceil(total / limit);
+
+    // --- Response metadata ---
+    const meta = {
       total,
-      page: parseInt(page),
-      limit: perPage,
-      totalPages: Math.ceil(total / perPage),
-      leads,
-    });
+      totalPages,
+      page,
+      pageLeads: leads.length,
+      isFirst: page === 1,
+      isLast: page === totalPages || totalPages === 0,
+      hasNext: page < totalPages,
+      hasPrevious: page > 1
+    };
+
+    return sendResponse(res, 200, { ...meta, leads });
   } catch (error) {
     next(error);
   }
@@ -70,28 +78,28 @@ export const getFilteredLeadsToTeleCaller = async (req, res, next) => {
 
 export const exportLeadToTeleCaller = async (req, res, next) => {
   try {
-    const { branch, _id: assignedTo } = req.user;
+    const { branch: branchArray, _id: assignedTo } = req.user;
     const { date, status, name } = req.query;
 
-    // Ensure required user context
-    if (!branch || !assignedTo) {
-      return next(new CustomError("Branch and user ID are required", 400));
+    const branch = Array.isArray(branchArray) ? branchArray[0] : branchArray;
+
+    if (!branch || !mongoose.Types.ObjectId.isValid(branch)) {
+      return next(new CustomError("Valid branch ID is required", 400));
+    }
+    if (!assignedTo || !mongoose.Types.ObjectId.isValid(assignedTo)) {
+      return next(new CustomError("Valid user ID is required", 400));
     }
 
-    // Build filters
     const filters = {
       branch: new mongoose.Types.ObjectId(branch),
       assignedTo: new mongoose.Types.ObjectId(assignedTo),
     };
-
     if (status) {
       filters.status = status;
     }
-
     if (name) {
       filters.leadName = { $regex: name, $options: "i" };
     }
-
     if (date) {
       const timezone = "Asia/Kolkata";
       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
@@ -112,27 +120,22 @@ export const getAllCreditManagersWithLeadCount = async (req, res, next) => {
   try {
     const branchId = req.user.branch;
 
-    // Step 1: Find the Designation ID for "Credit Manager"
     const creditManagerDesignation = await designationModel.findOne({
-      designation: "Credit Manager",
+      designation: "CREDITMANAGER",
     });
-
     if (!creditManagerDesignation) {
       return next(new CustomError("Credit Manager designation not found", 404));
     }
 
-    // Step 2: Get all credit managers in that branch
     const creditManagers = await employeeModel.find({
       designation: creditManagerDesignation._id,
       branch: branchId,
       isDeleted: false,
     });
 
-    // Step 3: Today's start and end time in Asia/Kolkata timezone
     const todayStart = moment.tz("Asia/Kolkata").startOf("day").toDate();
     const todayEnd = moment.tz("Asia/Kolkata").endOf("day").toDate();
 
-    // Step 4: Map each manager to include today's lead count
     const results = await Promise.all(
       creditManagers.map(async (manager) => {
         const leadCount = await Leads.countDocuments({
@@ -186,99 +189,87 @@ export const assignCreditManagerToLead = async (req, res, next) => {
   }
 };
 
-export const updateLeadStatusAndCreateHistory = async (req, res, next) => {
-  try {
-    const { leadId, status, description, scheduledDate, scheduledTime, remarks } = req.body;
-    const employeeId = req.user._id;
+export const createLeadHistory = async (req, res, next) => {
 
-    if (!leadId || !status || !description) {
-      return next(new CustomError("leadId, status, and description are required", 400));
-    }
+  const { leadId, status, description, scheduledDate, scheduledTime, remarks } = req.body;
+  const employeeId = req.user._id;
 
-
-    console.log(leadId, "id");
-
-    // 1. Find and update lead status
-    const lead = await Leads.findById(leadId);
-
-    console.log(lead, "llll");
-
-    if (!lead) {
-      return next(new CustomError("Lead not found", 404));
-    }
-
-    lead.status = status;
-    await lead.save();
-
-    // 2. Create lead history entry
-    const leadHistory = await leadHistoryModel.create({
-      lead: leadId,
-      status, // this is the new updated status
-      description,
-      scheduledDate,
-      scheduledTime,
-      remarks,
-      createdBy: employeeId,
-    });
-
-    return sendResponse(res, 200, {
-      lead,
-      leadHistory,
-    });
-  } catch (error) {
-    next(new CustomError(error.message || "Internal Server Error", 500));
+  if (!leadId || !status || !description) {
+    return next(new CustomError("leadId, status, and description are required", 400));
   }
+
+  const leadHistory = await leadHistoryModel.create({
+    lead: leadId,
+    status,
+    description,
+    scheduledDate,
+    scheduledTime,
+    remarks,
+    createdBy: employeeId,
+  });
+  const latestHistory = await leadHistoryModel.findOne({ lead: leadId }).sort({ createdAt: -1, _id: -1 }).limit(1).lean();
+  if (!latestHistory) {
+    throw new CustomError("Failed to retrieve lead history", 500);
+  }
+
+  const lead = await Leads.findByIdAndUpdate(leadId, { status: latestHistory.status }, { new: true, runValidators: true });
+  if (!lead) {
+    throw new CustomError("Lead not found", 404);
+  }
+
+  return sendResponse(res, 201, { lead, leadHistory });
 };
 
-export const getRecentLeadHistories = async (req, res, next) => {
-  try {
-    const { id } = req.params
-    // Fetch latest lead histories (e.g., last 20, sorted by newest first)
-    const histories = await leadHistoryModel.find({ lead: id })
-      .populate("lead", "leadName phone status loanType") // populate selected lead fields
-      .populate("createdBy", "firstName lastName email")   // optional: show who created the history
-      .sort({ createdAt: -1 }) // newest first
-    // .limit(20);             
+export const getLeadHistories = async (req, res, next) => {
+  const { id } = req.params;
 
-    return sendResponse(res, 200, histories);
-  } catch (error) {
-    next(new CustomError(error.message || "Failed to fetch lead histories", 500));
+  const leadExists = await Leads.exists({ _id: id });
+  if (!leadExists) {
+    throw new CustomError("Lead not found", 404);
   }
+  const histories = await leadHistoryModel.find({ lead: id }).populate("lead", "leadName phone status loanType").populate("createdBy", "firstName lastName email").sort({ createdAt: -1 });
+
+  return sendResponse(res, 200, histories);
 };
 
 export const updateLeadHistory = async (req, res, next) => {
-  const { id } = req.params; // leadHistory ID
-  const updateData = req.body;
+  const { id } = req.params;
+  const { status, description, scheduledDate, scheduledTime, remarks } = req.body;
 
-  const updatedHistory = await leadHistoryModel.findByIdAndUpdate(id, updateData, {
-    new: true,
-    runValidators: true,
-  });
+  const updateData = {};
+  if (status !== undefined) updateData.status = status;
+  if (description !== undefined) updateData.description = description;
+  if (scheduledDate !== undefined) updateData.scheduledDate = scheduledDate;
+  if (scheduledTime !== undefined) updateData.scheduledTime = scheduledTime;
+  if (remarks !== undefined) updateData.remarks = remarks;
 
-  if (!updatedHistory) {
-    return next(new CustomError("Lead history not found", 404));
-
+  if (Object.keys(updateData).length === 0) {
+    throw new CustomError("At least one field must be provided for update", 400);
   }
 
-  return sendResponse(res, 200, updatedHistory);
+  const updatedHistory = await leadHistoryModel.findByIdAndUpdate( id, updateData, { new: true, runValidators: true });
+  if (!updatedHistory) {
+    throw new CustomError("Lead history not found", 404);
+  }
 
+  const latestHistory = await leadHistoryModel.findOne({ lead: updatedHistory.lead }).sort({ createdAt: -1, _id: -1 }).limit(1).lean();
+  if (!latestHistory) {
+    throw new CustomError("Failed to retrieve lead history", 500);
+  }
+  const updatedLead = await Leads.findByIdAndUpdate( updatedHistory.lead, { status: latestHistory.status }, { new: true, runValidators: true });
 
+  return sendResponse(res, 200, { updatedHistory, updatedLead });
 };
 
 export const deleteLeadHistory = async (req, res, next) => {
-  try {
-    const { id } = req.params; // leadHistory ID
+  const { id } = req.params;
+  const deletedHistory = await leadHistoryModel.findByIdAndDelete(id);
 
-    const deletedHistory = await leadHistoryModel.findByIdAndDelete(id);
-
-    if (!deletedHistory) {
-      return next(new CustomError("Lead history not found", 404));
-    }
-
-    return sendResponse(res, 200, { message: "Lead history deleted successfully" });
-  } catch (error) {
-    next(error); // forward unexpected errors to the global error handler
+  if (!deletedHistory) {
+    throw new CustomError("Lead history not found", 404);
   }
+
+  return sendResponse(res, 200, { message: "Lead history deleted successfully", deletedId: id });
 };
 
 export const getAssignedLeadStats = async (req, res, next) => {
@@ -391,3 +382,4 @@ export const getAssignedLeadsByStatus = async (req, res, next) => {
     next(error);
   }
 };
+

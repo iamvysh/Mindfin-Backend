@@ -11,144 +11,270 @@ import TopUpLoan from "../../model/topUpLoanModel.js";
 
 export const getFilteredCreditManagerLeads = async (req, res, next) => {
   try {
-    const userId = req.user._id;
-    const branchId = req.user.branch;
-    const { teleCaller, status, date, search, loanType, page = 1, limit = 10 } = req.query;
+    let { teleCaller, status, date, search, loanType, page = 1, limit = 10, sortBy = "assignedDate", order = "desc" } = req.query;
+    const { branch, _id: creditManagerId } = req.user;
 
-    const timezone = "Asia/Kolkata";
+    if (!branch?.length || !creditManagerId) {
+      return next(new CustomError("Branch and Credit Manager ID are required", 400));
+    }
 
-    const matchStage = {
-      creditManger: new mongoose.Types.ObjectId(userId),
-      branch: new mongoose.Types.ObjectId(branchId),
+    // --- Prepare filters ---
+    const filters = {
+      creditManger: new mongoose.Types.ObjectId(creditManagerId),
+      branch: { $in: branch.map(b => new mongoose.Types.ObjectId(b)) }
     };
 
-    if (teleCaller) {
-      matchStage.assignedTo = teleCaller;
-    }
-
-    if (status) {
-      matchStage.status = status;
-    }
+    if (teleCaller) filters.assignedTo = new mongoose.Types.ObjectId(teleCaller);
+    if (status) filters.status = status;
+    if (search) filters.leadName = { $regex: search, $options: "i" };
 
     if (date) {
+      const timezone = "Asia/Kolkata";
       const startOfDay = moment.tz(date, timezone).startOf("day").toDate();
       const endOfDay = moment.tz(date, timezone).endOf("day").toDate();
-      matchStage.assignedDate = { $gte: startOfDay, $lte: endOfDay };
+      filters.assignedDate = { $gte: startOfDay, $lte: endOfDay };
     }
 
-    if (search) {
-      matchStage.leadName = { $regex: search, $options: "i" };
-    }
+    // --- Pagination & sorting ---
+    page = Math.max(1, parseInt(page));
+    limit = Math.max(1, Math.min(parseInt(limit), 100));
+    const skip = (page - 1) * limit;
 
-    const pageNum = parseInt(page);
-    const pageSize = parseInt(limit);
-    const skip = (pageNum - 1) * pageSize;
+    const sortOptions = {
+      leadName: { leadName: order === "asc" ? 1 : -1 },
+      loanAmount: { loanAmount: order === "asc" ? 1 : -1 },
+      assignedDate: { assignedDate: order === "asc" ? 1 : -1 },
+      createdAt: { createdAt: order === "asc" ? 1 : -1 }
+    };
+    const sortCriteria = sortOptions[sortBy] || { assignedDate: -1 };
 
-    const pipeline = [
-      { $match: matchStage },
+    // --- Base pipeline for filtering ---
+    const basePipeline = [
+      { $match: filters },
       {
         $lookup: {
           from: "loantypes",
           localField: "loanType",
           foreignField: "_id",
-          as: "loanType",
-        },
+          as: "loanType"
+        }
       },
-      { $unwind: "$loanType" },
+      { $unwind: { path: "$loanType", preserveNullAndEmptyArrays: true } }
     ];
 
-    // If loanType name is provided, filter on it
+    // Apply loanType filter if present
     if (loanType) {
-      pipeline.push({
-        $match: {
-          "loanType.loanName": loanType, // e.g., "Personal Loan"
-        },
+      basePipeline.push({
+        $match: { "loanType.loanName": { $regex: `^${loanType}$`, $options: "i" } }
       });
     }
 
-    // Continue lookups for other references
-    pipeline.push(
+    // --- Data retrieval pipeline ---
+    const dataPipeline = [
+      ...basePipeline,
       {
         $lookup: {
           from: "employees",
           localField: "assignedTo",
           foreignField: "_id",
-          as: "assignedTo",
-        },
+          as: "assignedTo"
+        }
       },
-      {
-        $unwind: {
-          path: "$assignedTo",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $unwind: { path: "$assignedTo", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "employees",
           localField: "createdBy",
           foreignField: "_id",
-          as: "createdBy",
-        },
+          as: "createdBy"
+        }
       },
-      {
-        $unwind: {
-          path: "$createdBy",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $unwind: { path: "$createdBy", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "employees",
           localField: "creditManger",
           foreignField: "_id",
-          as: "creditManger",
-        },
+          as: "creditManger"
+        }
       },
-      {
-        $unwind: {
-          path: "$creditManger",
-          preserveNullAndEmptyArrays: true,
-        },
-      },
+      { $unwind: { path: "$creditManger", preserveNullAndEmptyArrays: true } },
       {
         $lookup: {
           from: "branches",
           localField: "branch",
           foreignField: "_id",
-          as: "branch",
-        },
+          as: "branch"
+        }
       },
+      { $unwind: { path: "$branch", preserveNullAndEmptyArrays: true } },
+      // Add bank details lookup
       {
-        $unwind: {
-          path: "$branch",
-          preserveNullAndEmptyArrays: true,
-        },
+        $lookup: {
+          from: "bankdetails",
+          localField: "_id",
+          foreignField: "lead",
+          as: "bankDetails"
+        }
       },
-      { $sort: { assignedDate: -1 } },
-      { $skip: skip },
-      { $limit: pageSize }
-    );
+      // Add bank name lookup within bank details
+      {
+        $lookup: {
+          from: "banks",
+          localField: "bankDetails.bankName",
+          foreignField: "_id",
+          as: "allBanks"
+        }
+      },
+      // Project all fields from lead model + limited employee fields + bank details
+      {
+        $project: {
+          // Include all lead fields
+          leadName: 1,
+          email: 1,
+          phone: 1,
+          alternativePhone: 1,
+          location: 1,
+          loanAmount: 1,
+          LeadCreatedDate: 1,
+          assignedDate: 1,
+          creditManagerAssignedDate: 1,
+          status: 1,
+          document: 1,
+          panCard: 1,
+          dateOfBirth: 1,
+          createdAt: 1,
+          updatedAt: 1,
+          __v: 1,
 
-    // Clone pipeline for count without skip/limit
-    const countPipeline = [...pipeline];
-    countPipeline.push({ $count: "total" });
+          // Include populated fields with limited employee data
+          loanType: 1,
+          branch: 1,
+          creditManger: {
+            $cond: [
+              "$creditManger",
+              {
+                _id: "$creditManger._id",
+                firstName: "$creditManger.firstName",
+                lastName: "$creditManger.lastName"
+              },
+              null
+            ]
+          },
+          assignedTo: {
+            $cond: [
+              "$assignedTo",
+              {
+                _id: "$assignedTo._id",
+                firstName: "$assignedTo.firstName",
+                lastName: "$assignedTo.lastName"
+              },
+              null
+            ]
+          },
+          createdBy: {
+            $cond: [
+              "$createdBy",
+              {
+                _id: "$createdBy._id",
+                firstName: "$createdBy.firstName",
+                lastName: "$createdBy.lastName"
+              },
+              null
+            ]
+          },
+
+          // Process bank details
+          bankDetails: {
+            $map: {
+              input: "$bankDetails",
+              as: "bd",
+              in: {
+                // Include all bank detail fields
+                _id: "$$bd._id",
+                bankerName: "$$bd.bankerName",
+                phone: "$$bd.phone",
+                emailId: "$$bd.emailId",
+                loanAmountRequested: "$$bd.loanAmountRequested",
+                rateOfInterest: "$$bd.rateOfInterest",
+                pf: "$$bd.pf",
+                tenure: "$$bd.tenure",
+                insuranceAmount: "$$bd.insuranceAmount",
+                loanType: "$$bd.loanType",
+                scheduledDate: "$$bd.scheduledDate",
+                followUpDate: "$$bd.followUpDate",
+                status: "$$bd.status",
+                document: "$$bd.document",
+                remarks: "$$bd.remarks",
+                createdAt: "$$bd.createdAt",
+                updatedAt: "$$bd.updatedAt",
+                // Add bank name
+                bankName: {
+                  $arrayElemAt: [
+                    {
+                      $filter: {
+                        input: "$allBanks",
+                        as: "bank",
+                        cond: { $eq: ["$$bank._id", "$$bd.bankName"] }
+                      }
+                    },
+                    0
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      // Clean up bank name field
+      {
+        $addFields: {
+          bankDetails: {
+            $map: {
+              input: "$bankDetails",
+              as: "bd",
+              in: {
+                $mergeObjects: [
+                  "$$bd",
+                  { bankName: "$$bd.bankName.name" }
+                ]
+              }
+            }
+          }
+        }
+      },
+      { $sort: sortCriteria },
+      { $skip: skip },
+      { $limit: limit }
+    ];
+
+    // --- Count pipeline ---
+    const countPipeline = [
+      ...basePipeline,
+      { $count: "total" }
+    ];
 
     const [leads, countResult] = await Promise.all([
-      Leads.aggregate(pipeline),
-      Leads.aggregate(countPipeline),
+      Leads.aggregate(dataPipeline),
+      Leads.aggregate(countPipeline)
     ]);
 
-    const totalCount = countResult.length > 0 ? countResult[0].total : 0;
+    const total = countResult[0]?.total || 0;
+    const totalPages = Math.ceil(total / limit);
 
-    return sendResponse(res, 200, {
-      data: leads,
-      pagination: {
-        total: totalCount,
-        page: pageNum,
-        limit: pageSize,
-        totalPages: Math.ceil(totalCount / pageSize),
-      },
-    });
+    // --- Response metadata ---
+    const meta = {
+      total,
+      totalPages,
+      page,
+      pageLeads: leads.length,
+      isFirst: page === 1,
+      isLast: page === totalPages || totalPages === 0,
+      hasNext: page < totalPages,
+      hasPrevious: page > 1
+    };
+
+    return sendResponse(res, 200, { ...meta, leads });
   } catch (error) {
     next(error);
   }
@@ -237,6 +363,9 @@ export const updateLeadStatus = async (req, res) => {
 
 };
 
+
+
+// bank details
 export const addBankDetails = async (req, res, next) => {
   try {
     const {
@@ -361,6 +490,9 @@ export const deleteBankDetail = async (req, res, next) => {
   }
 };
 
+
+
+// follow up
 export const addFollowUp = async (req, res, next) => {
   try {
     const {
@@ -370,20 +502,13 @@ export const addFollowUp = async (req, res, next) => {
       pf,
       tenure,
       insuranceAmount,
-      loanType,
       date,
       followUpDate,
       status,
       remarks,
     } = req.body;
 
-    // Validate loanType and status manually (optional - already handled by schema enum)
-    // const validLoanTypes = ["Home", "Car", "Personal", "Other"];
     const validStatuses = ["Confirmed", "In Progress", "Declined"];
-
-    // if (!validLoanTypes.includes(loanType)) {
-    //   return next(new CustomError("Invalid loan type", 400));
-    // }
 
     if (!validStatuses.includes(status)) {
       return next(new CustomError("Invalid status", 400));
@@ -396,7 +521,6 @@ export const addFollowUp = async (req, res, next) => {
       pf,
       tenure,
       insuranceAmount,
-      loanType,
       date,
       followUpDate,
       status,
@@ -475,6 +599,8 @@ export const deleteFollowUp = async (req, res, next) => {
     next(error);
   }
 };
+
+
 
 export const getLeadsForCreditManagerForBankDetails = async (req, res, next) => {
   try {
@@ -578,7 +704,9 @@ export const fetchCibilScore = async (req, res, next) => {
   }
 };
 
-//add top-up-api's
+
+
+//top-up-api's
 export const createTopUpLoan = async (req, res, next) => {
   try {
     const { applicant, type, amount, cibilScore, remarks } = req.body;
@@ -594,6 +722,80 @@ export const createTopUpLoan = async (req, res, next) => {
     next(error);
   }
 };
+
+export const getTopUpLoansByApplicant = async (req, res, next) => {
+  try {
+    const { applicantId } = req.params;
+
+    const loans = await TopUpLoan.find({ applicant: applicantId }).populate("applicant");
+
+    return sendResponse(res, 200, loans);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const getTopUpLoanById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const loan = await TopUpLoan.findById(id).populate("applicant");
+
+    if (!loan) {
+      return next(new CustomError("Top-up loan not found", 404));
+    }
+
+    return sendResponse(res, 200, loan);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const updateTopUpLoan = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { type, status } = req.body;
+
+    if (type && !["Personal", "Business"].includes(type)) {
+      return next(new CustomError("Invalid loan type", 400));
+    }
+
+    if (status && !["Pending", "Approved", "Rejected"].includes(status)) {
+      return next(new CustomError("Invalid status value", 400));
+    }
+
+    const updated = await TopUpLoan.findByIdAndUpdate(id, req.body, {
+      new: true,
+      runValidators: true,
+    }).populate("applicant");
+
+    if (!updated) {
+      return next(new CustomError("Top-up loan not found or update failed", 404));
+    }
+
+    return sendResponse(res, 200, updated);
+  } catch (error) {
+    next(error);
+  }
+};
+
+export const deleteTopUpLoan = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const deleted = await TopUpLoan.findByIdAndDelete(id);
+
+    if (!deleted) {
+      return next(new CustomError("Top-up loan not found", 404));
+    }
+
+    return sendResponse(res, 200, { message: "Top-up loan deleted successfully" });
+  } catch (error) {
+    next(error);
+  }
+};
+
+
 
 ////Graph data representation
 export const getCreditManagerStats = async (req, res, next) => {

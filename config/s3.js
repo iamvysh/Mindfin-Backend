@@ -96,30 +96,37 @@ async function uploadFile(req, rootFolder) {
 
 async function uploadFileForTeleCallerLeads(req, rootFolder) {
   const data = [];
+  
+  // Add robust error handling
+  if (!req.files || !req.files.image) {
+    console.error("No files found in request");
+    return data;
+  }
 
   const images = Array.isArray(req.files.image)
     ? req.files.image
-    : [req.files.image]; // ensure always array
+    : [req.files.image];
 
   for (const file of images) {
-    const originalName = file.name;
-    const extension = originalName.split(".").pop();
-    const uniqueName = `${rootFolder}/${Math.round(
-      Math.random() * 1000
-    )}${Date.now()}${Math.round(Math.random() * 10000)}.${extension}`;
+    try {
+      const originalName = file.name;
+      const extension = originalName.split(".").pop();
+      const uniqueName = `${rootFolder}/${Math.random().toString(36).substring(2, 15)}${Date.now()}.${extension}`;
 
-    const uploadCommand = new PutObjectCommand({
-      Bucket: process.env.BUCKET_NAME_2,
-      Key: uniqueName,
-      Body: file.data,
-      ContentType: file.mimetype,
-    });
+      const uploadCommand = new PutObjectCommand({
+        Bucket: process.env.BUCKET_NAME_2,
+        Key: uniqueName,
+        Body: file.data,
+        ContentType: file.mimetype,
+      });
 
-    await s3.send(uploadCommand);
+      await s3.send(uploadCommand);
 
-    const url = `https://${process.env.BUCKET_NAME_2}.s3.ap-south-1.amazonaws.com/${uniqueName}`;
-
-    data.push({ name: originalName, url });
+      const url = `https://${process.env.BUCKET_NAME_2}.s3.ap-south-1.amazonaws.com/${uniqueName}`;
+      data.push({ name: originalName, url });
+    } catch (error) {
+      console.error(`Error uploading file: ${file.name}`, error);
+    }
   }
 
   return data;

@@ -2,14 +2,12 @@ import mongoose from "mongoose";
 
 const bankDetailsSchema = new mongoose.Schema({
 
-   lead: {
+  lead: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "leads",
     required: true,
   },
   bankName: {
-    // type: String,
-    // required: true,
     type: mongoose.Schema.Types.ObjectId,
     ref: "bank",
     required: true,
@@ -47,13 +45,8 @@ const bankDetailsSchema = new mongoose.Schema({
     required: false,
   },
   loanType: {
-    // type: String,
-    // enum: ["Home", "Car", "Personal", "Other"], // Adjust based on options
-    // required: true,
-   
-       type:mongoose.Schema.Types.ObjectId,
-       ref: "loanType",  
-      
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "loanType"
   },
   scheduledDate: {
     type: Date,
@@ -68,7 +61,7 @@ const bankDetailsSchema = new mongoose.Schema({
     enum: ["Confirmed", "In Progress", "Declined"],
     required: true,
   },
-   document: [
+  document: [
     {
       name: { type: String },
       url: { type: String },

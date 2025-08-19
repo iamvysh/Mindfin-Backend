@@ -96,172 +96,186 @@ export const bulkUploadLeads = async (req, res, next) => {
 };
 
 export const getAllLeads = async (req, res, next) => {
-    const { type, branch, _id } = req.user;
-    const page = parseInt(req.query.page) || 1;
-    const limit = parseInt(req.query.limit) || 10;
-    const skip = (page - 1) * limit;
-    const { search, date } = req.query;
-    
-
-    // Build base query object based on user type
-    let query = {};
-
-    if (type === 'DATAENTRY') {
-        
-        query = {
-            branch: branch,
-            createdBy: _id
-        };
-    } else if (type === 'ADMIN') {
-        query = {
-            branch: branch
-        };
-    } else if (type === 'SUPERADMIN') {
-        query = {}; // No restrictions
-    }
-
-    // Add search condition if provided
-    if (search) {
-        query.leadName = { $regex: search, $options: 'i' };
-    }
-
-    // Add date filtering if provided
-    if (date) {
-        const filterDate = new Date(date);
-        const nextDay = new Date(filterDate);
-        nextDay.setDate(nextDay.getDate() + 1);
-
-        query.LeadCreatedDate = {
-            $gte: filterDate,
-            $lt: nextDay
-        };
-    }
+  const { type, branch, _id } = req.user;
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 10;
+  const skip = (page - 1) * limit;
+  const { search, date } = req.query;
 
 
-    try {
-        const totalLeads = await Leads.countDocuments(query);
-        const leads = await Leads.find(query)
-            .populate("loanType")
-            .skip(skip)
-            .limit(limit)
-            .sort({ LeadCreatedDate: -1 });
+  // Build base query object based on user type
+  let query = {};
 
-            
+  if (type === 'DATAENTRY') {
 
-        const totalPages = Math.ceil(totalLeads / limit);
+    query = {
+      branch: branch,
+      createdBy: _id
+    };
+  } else if (type === 'ADMIN') {
+    query = {
+      branch: branch
+    };
+  } else if (type === 'SUPERADMIN') {
+    query = {}; // No restrictions
+  }
 
-        sendResponse(res, 200, {
-            leads,
-            pagination: {
-                currentPage: page,
-                totalPages,
-                totalLeads,
-                leadsPerPage: limit
-            }
-        });
-    } catch (error) {
-        next(error);
-    }
+  // Add search condition if provided
+  if (search) {
+    query.leadName = { $regex: search, $options: 'i' };
+  }
+
+  // Add date filtering if provided
+  if (date) {
+    const filterDate = new Date(date);
+    const nextDay = new Date(filterDate);
+    nextDay.setDate(nextDay.getDate() + 1);
+
+    query.LeadCreatedDate = {
+      $gte: filterDate,
+      $lt: nextDay
+    };
+  }
+
+
+  try {
+    const totalLeads = await Leads.countDocuments(query);
+    const leads = await Leads.find(query)
+      .populate("loanType")
+      .skip(skip)
+      .limit(limit)
+      .sort({ LeadCreatedDate: -1 });
+
+
+
+    const totalPages = Math.ceil(totalLeads / limit);
+
+    sendResponse(res, 200, {
+      leads,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalLeads,
+        leadsPerPage: limit
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getALeadByID = async (req,res,next) => {
-    const {id} = req.params
+export const getALeadByID = async (req, res, next) => {
 
-    const lead = await Leads.findById(id)
-    .populate("loanType")
-    
-    if(!lead){
-        return next(new CustomError('Lead not found'))
-    }
+  const { id } = req.params;
+  const lead = await Leads.findById(id).populate("loanType", "loanName").populate("assignedTo", "firstName lastName").lean();
+  if (!lead) {
+    return next(new CustomError("Lead not found!"));
+  }
+  if (lead.loanType) lead.loanType = lead.loanType.loanName;
+  if (lead.assignedTo) lead.assignedTo = `${lead.assignedTo.firstName} ${lead.assignedTo.lastName}`;
 
-    sendResponse(res,200,lead)
+  sendResponse(res, 200, lead);
+};
+
+export const updateLead = async (req, res, next) => {
+  const { id } = req.params;
+
+  const lead = await Leads.findByIdAndUpdate(
+    id,
+    { $set: { ...req.body } },
+    { new: true }
+  );
+
+  if (!lead) {
+    return next(new CustomError('Lead not found'));
+  }
+
+  sendResponse(res, 200, lead, { message: 'Lead updated successfully.' });
+};
+
+export const deleteLead = async (req, res, next) => {
+  const { id } = req.params
+
+  const lead = await Leads.findByIdAndDelete(id)
+
+  if (!lead) {
+    return next(new CustomError('Lead not found'))
+  }
+
+  sendResponse(res, 200, lead);
 }
 
-export const updateLead = async (req,res,next) => {
-    const {id} = req.params
-    // const {leadName,email,phone,alternativePhone,branch,status,source,assignedTo} = req.body
+export const deleteAllLeads = async (req, res, next) => {
+  const result = await Leads.deleteMany({});
 
-    const lead = await Leads.findByIdAndUpdate(id,{$set:{...req.body}},{new:true})
-    
-    if(!lead){
-        return next(new CustomError('Lead not found'))
-    }
+  if (result.deletedCount === 0) {
+    return next(new CustomError('No leads found to delete'));
+  }
 
-    sendResponse(res,200,lead)
-}       
+  sendResponse(res, 200, { success: true, deletedCount: result.deletedCount });
+};
 
-export const deleteLead = async (req,res,next) => {
-    const {id} = req.params
-
-    const lead = await Leads.findByIdAndDelete(id)
-    
-    if(!lead){
-        return next(new CustomError('Lead not found'))
-    }
-
-    sendResponse(res,200,lead)
-}       
 
 export const exportLeads = async (req, res, next) => {
-    const { type, branch, _id } = req.user;
-    const { search, date } = req.query;
-     
+  const { type, branch, _id } = req.user;
+  const { search, date } = req.query;
 
-    console.log(search, date ,"ooooo");
-    
-    // Base query object based on user type
-    let query = {};
 
-    if (type === 'Data entry') {
-        query = {
-            branch: branch,
-            createdBy: _id
-        };
-    } else if (type === 'Admin') {
-        query = {
-            branch: branch
-        };
-    } else if (type === 'SUPERADMIN') {
-        query = {}; // No restrictions
+  console.log(search, date, "ooooo");
+
+  // Base query object based on user type
+  let query = {};
+
+  if (type === 'Data entry') {
+    query = {
+      branch: branch,
+      createdBy: _id
+    };
+  } else if (type === 'Admin') {
+    query = {
+      branch: branch
+    };
+  } else if (type === 'SUPERADMIN') {
+    query = {}; // No restrictions
+  }
+
+  // Add search filter
+  if (search) {
+    query.leadName = { $regex: search, $options: 'i' };
+  }
+
+  // Add date filter
+  // if (date) {
+  //     const filterDate = new Date(date);
+  //     const nextDay = new Date(filterDate);
+  //     nextDay.setDate(nextDay.getDate() + 1);
+
+  //     query.LeadCreatedDate = {
+  //         $gte: filterDate,
+  //         $lt: nextDay
+  //     };
+  // }
+  if (date && date !== 'null' && date !== '') {
+    const filterDate = new Date(date);
+    if (!isNaN(filterDate)) { // Check for valid date
+      const nextDay = new Date(filterDate);
+      nextDay.setDate(nextDay.getDate() + 1);
+
+      query.LeadCreatedDate = {
+        $gte: filterDate,
+        $lt: nextDay
+      };
     }
+  }
 
-    // Add search filter
-    if (search) {
-        query.leadName = { $regex: search, $options: 'i' };
-    }
+  const leads = await Leads.find(query).populate("loanType").sort({ LeadCreatedDate: -1 });
 
-    // Add date filter
-    // if (date) {
-    //     const filterDate = new Date(date);
-    //     const nextDay = new Date(filterDate);
-    //     nextDay.setDate(nextDay.getDate() + 1);
+  if (!leads) {
+    return next(new CustomError('Leads not found'));
+  }
 
-    //     query.LeadCreatedDate = {
-    //         $gte: filterDate,
-    //         $lt: nextDay
-    //     };
-    // }
-    if (date && date !== 'null' && date !== '') {
-        const filterDate = new Date(date);
-        if (!isNaN(filterDate)) { // Check for valid date
-            const nextDay = new Date(filterDate);
-            nextDay.setDate(nextDay.getDate() + 1);
-    
-            query.LeadCreatedDate = {
-                $gte: filterDate,
-                $lt: nextDay
-            };
-        }
-    }
+  sendResponse(res, 200, leads);
 
-        const leads = await Leads.find(query).populate("loanType").sort({ LeadCreatedDate: -1 });
-
-        if (!leads ) {
-            return next(new CustomError('Leads not found'));
-        }
-
-        sendResponse(res, 200, leads);
-    
 };
 
 

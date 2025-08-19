@@ -18,13 +18,14 @@ const leads = new Schema({
   },
   loanType: {
     type: Schema.Types.ObjectId,
-    ref: "loanType",  
+    ref: "loanType",
   },
   loanAmount: {
     type: Number,
   },
   LeadCreatedDate: {
     type: Date,
+    default: Date.now
   },
   branch: {
     type: Schema.Types.ObjectId,
@@ -51,7 +52,7 @@ const leads = new Schema({
   status: {
     type: String,
     enum: ["INPROGRESS", "PENDING", "CLOSED", "DROPPED"],
-    default:"PENDING"
+    default: "PENDING"
   },
   document: [
     {
@@ -59,11 +60,11 @@ const leads = new Schema({
       url: { type: String },
     },
   ],
-  panCard:{
-        type: String,
+  panCard: {
+    type: String,
   },
-  dateOfBirth:{
-    type:Date
+  dateOfBirth: {
+    type: Date
   }
 });
 

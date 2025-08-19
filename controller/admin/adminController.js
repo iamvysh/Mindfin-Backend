@@ -54,7 +54,6 @@ export const assignLeadToEmployee = async (req, res, next) => {
     }
 
     return sendResponse(res, 200, updatedLead);
-
 };
 
 export const getMonthlyLeadCountsByDesignation = async (req, res, next) => {

@@ -13,11 +13,14 @@ export const upload = async (req, res, next) => {
 
 export const uploadTelecallerLeads = async (req, res, next) => {
 
-  const folderName = req.body.folderName;
-  const files = await uploadFileForTeleCallerLeads(req, folderName);
-
-  return sendResponse(res, 200, files);
-
+    if (!req.body.folderName) {
+      return sendResponse(res, 400, false, "folderName is required");
+    }
+    
+    const folderName = req.body.folderName;
+    const files = await uploadFileForTeleCallerLeads(req, folderName);
+    
+    return sendResponse(res, 200, files);
 };
 
 export const downLoadBlob = async (req, res, next) => {

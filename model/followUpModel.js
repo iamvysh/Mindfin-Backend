@@ -28,11 +28,8 @@ const followUpSchema = new Schema({
     required: false,
   },
   loanType: {
-    // type: String,
-    // enum: ["Home", "Car", "Personal", "Other"], // Match this to  main schema
-    // required: true,
-        type: Schema.Types.ObjectId,
-       ref: "loanType",  
+    type: Schema.Types.ObjectId,
+    ref: "loanType",
   },
   date: {
     type: Date,

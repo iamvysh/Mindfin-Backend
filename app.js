@@ -45,9 +45,9 @@ const corsOptions = {
     credentials: true
 };
 
-app.use(helmet());
-app.use(rateLimiter({ max: 250 }));
 app.use(cors(corsOptions));
+app.use(helmet());
+// app.use(rateLimiter({ max: 250 }));
 app.use(express.json({ limit: "100mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10000mb" }));
 app.use(cookieParser());

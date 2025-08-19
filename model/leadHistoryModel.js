@@ -1,4 +1,3 @@
-// models/leadHistory.js
 import { Schema, model } from "mongoose";
 
 const leadHistorySchema = new Schema({
@@ -9,7 +8,7 @@ const leadHistorySchema = new Schema({
   },
   status: {
     type: String,
-    enum: ["INPROGRESS", "PENDING", "CLOSED", "DROPPED"], // Snapshot of lead's status
+    enum: ["INPROGRESS", "PENDING", "CLOSED", "DROPPED"],
     required: true,
   },
   description: {
@@ -20,7 +19,7 @@ const leadHistorySchema = new Schema({
     type: Date,
   },
   scheduledTime: {
-    type: String, // String for simplicity (e.g., "14:30")
+    type: String,
   },
   remarks: {
     type: String,
