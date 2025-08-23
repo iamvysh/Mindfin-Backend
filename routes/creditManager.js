@@ -28,12 +28,13 @@ router.put("/bank/:id", tryCatchMiddleware(updateFollowUp)); //✅
 router.delete("/bank/:id", tryCatchMiddleware(deleteFollowUp)); //✅
 router.get("/get-credit-manager/bank-leads", primaryValidater, tryCatchMiddleware(getLeadsForCreditManagerForBankDetails)) //✅
 
-router.post("/check-cibil", primaryValidater, tryCatchMiddleware(fetchCibilScore));
 router.post("/topup-loan", primaryValidater, tryCatchMiddleware(createTopUpLoan));
 router.get("/topup-loan/applicant/:applicantId", primaryValidater, tryCatchMiddleware(getTopUpLoansByApplicant));
 router.get("/topup-loan/:id", primaryValidater, tryCatchMiddleware(getTopUpLoanById));
 router.put("/topup-loan/:id", primaryValidater, tryCatchMiddleware(updateTopUpLoan));
 router.delete("/topup-loan/:id", primaryValidater, tryCatchMiddleware(deleteTopUpLoan));
+
+router.post("/check-cibil", primaryValidater, tryCatchMiddleware(fetchCibilScore));
 router.get("/statistics", primaryValidater, tryCatchMiddleware(getCreditManagerStats));
 
 

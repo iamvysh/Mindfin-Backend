@@ -727,7 +727,7 @@ export const getTopUpLoansByApplicant = async (req, res, next) => {
   try {
     const { applicantId } = req.params;
 
-    const loans = await TopUpLoan.find({ applicant: applicantId }).populate("applicant");
+    const loans = await TopUpLoan.find({ applicant: applicantId });
 
     return sendResponse(res, 200, loans);
   } catch (error) {
@@ -739,7 +739,7 @@ export const getTopUpLoanById = async (req, res, next) => {
   try {
     const { id } = req.params;
 
-    const loan = await TopUpLoan.findById(id).populate("applicant");
+    const loan = await TopUpLoan.findById(id);
 
     if (!loan) {
       return next(new CustomError("Top-up loan not found", 404));
@@ -767,7 +767,7 @@ export const updateTopUpLoan = async (req, res, next) => {
     const updated = await TopUpLoan.findByIdAndUpdate(id, req.body, {
       new: true,
       runValidators: true,
-    }).populate("applicant");
+    });
 
     if (!updated) {
       return next(new CustomError("Top-up loan not found or update failed", 404));

@@ -38,6 +38,7 @@ const leads = new Schema({
   assignedTo: {
     type: Schema.Types.ObjectId,
     ref: "employee",
+    default: null
   },
   assignedDate: {
     type: Date,
@@ -45,6 +46,7 @@ const leads = new Schema({
   creditManger: {
     type: Schema.Types.ObjectId,
     ref: "employee",
+    default: null
   },
   creditManagerAssignedDate: {
     type: Date,
