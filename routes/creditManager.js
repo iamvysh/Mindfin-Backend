@@ -34,7 +34,7 @@ router.get("/topup-loan/:id", primaryValidater, tryCatchMiddleware(getTopUpLoanB
 router.put("/topup-loan/:id", primaryValidater, tryCatchMiddleware(updateTopUpLoan));
 router.delete("/topup-loan/:id", primaryValidater, tryCatchMiddleware(deleteTopUpLoan));
 
-router.post("/check-cibil", primaryValidater, tryCatchMiddleware(fetchCibilScore));
+router.get("/check-cibil/:leadId", primaryValidater, tryCatchMiddleware(fetchCibilScore));
 router.get("/statistics", primaryValidater, tryCatchMiddleware(getCreditManagerStats));
 
 

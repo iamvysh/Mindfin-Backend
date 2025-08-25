@@ -11,7 +11,7 @@ import TopUpLoan from "../../model/topUpLoanModel.js";
 
 export const getFilteredCreditManagerLeads = async (req, res, next) => {
   try {
-    let { teleCaller, status, date, search, loanType, page = 1, limit = 10, sortBy = "assignedDate", order = "desc" } = req.query;
+    let { teleCaller, status, date, search, loanType, page = 1, limit = 5, sortBy = "assignedDate", order = "desc" } = req.query;
     const { branch, _id: creditManagerId } = req.user;
 
     if (!branch?.length || !creditManagerId) {
@@ -684,26 +684,60 @@ export const getLeadsForCreditManagerForBankDetails = async (req, res, next) => 
 };
 
 //fetch cibil score
+// export const fetchCibilScore = async (req, res, next) => {
+//   try {
+//     const { panCard, dateOfBirth } = req.body;
+
+//     if (!panCard || !dateOfBirth) {
+//       return next(new CustomError("PAN card and DOB are required", 400));
+//     }
+
+//     // Mock CIBIL score logic (replace with real API later)
+//     const score = Math.floor(Math.random() * (850 - 650 + 1)) + 650;
+
+//     return sendResponse(res, 200, {
+//       cibilScore: score,
+//       remarks: score >= 750 ? "Excellent" : "Average",
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 export const fetchCibilScore = async (req, res, next) => {
   try {
-    const { panCard, dateOfBirth } = req.body;
+    const { leadId } = req.params;
 
-    if (!panCard || !dateOfBirth) {
-      return next(new CustomError("PAN card and DOB are required", 400));
+    // 1. Find the lead in DB
+    const lead = await Leads.findById(leadId);
+    if (!lead) {
+      return res.status(404).json({ message: "Lead not found" });
     }
 
-    // Mock CIBIL score logic (replace with real API later)
-    const score = Math.floor(Math.random() * (850 - 650 + 1)) + 650;
+    // 2. Extract panCard & dateOfBirth from DB
+    const { panCard, dateOfBirth } = lead;
+    if (!panCard || !dateOfBirth) {
+      return res.status(400).json({ message: "Lead does not have PAN or DOB" });
+    }
 
-    return sendResponse(res, 200, {
-      cibilScore: score,
-      remarks: score >= 750 ? "Excellent" : "Average",
+    // 3. Instead of calling real CIBIL API, mock the score
+    const mockScore = 750; // can change this for testing
+
+    // 4. Send the score
+    res.json({
+      leadId,
+      leadName: lead.leadName,
+      panCard,
+      dateOfBirth,
+      cibilScore: mockScore,
+      message: "Mock CIBIL score fetched successfully"
     });
+
   } catch (error) {
-    next(error);
+    console.error(error);
+    res.status(500).json({ message: "Error checking CIBIL score", error: error.message });
   }
 };
-
 
 
 //top-up-api's

@@ -19,8 +19,10 @@ export const createDesignation = async (req, res, next) => {
 };
 
 export const getAllDesignations = async (req, res, next) => {
-  // Fetch all designations that are not deleted
-  const designations = await designationModel.find({ isDeleted: false });
+  const designations = await designationModel.find({
+    isDeleted: false,
+    designation: { $nin: ["SUPERADMIN", "ADMIN", "EMPLOYEE"] }
+  });
   sendResponse(res, 200, designations);
 };
 
